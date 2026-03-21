@@ -2,8 +2,24 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm, type Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { carsApi } from '../api/cars';
 import { useAuth } from '../context/AuthContext';
+
+const editSchema = z.object({
+  make: z.string().min(1, 'Make is required'),
+  model: z.string().min(1, 'Model is required'),
+  year: z.coerce.number().min(1900).max(2100),
+  mileage: z.coerce.number().min(0),
+  vin: z.string().optional(),
+  color: z.string().optional(),
+  condition: z.string().optional(),
+  description: z.string().optional(),
+  askingPrice: z.coerce.number().min(0).optional(),
+});
+type EditFormData = z.infer<typeof editSchema>;
 
 export default function CarDetailPage() {
   const { t } = useTranslation();
@@ -12,6 +28,9 @@ export default function CarDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editSuccess, setEditSuccess] = useState('');
 
   const { data: car, isLoading } = useQuery({
     queryKey: ['car', id],
@@ -19,9 +38,27 @@ export default function CarDetailPage() {
     enabled: !!id,
   });
 
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<EditFormData>({
+    resolver: zodResolver(editSchema) as Resolver<EditFormData>,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: () => carsApi.delete(Number(id)),
     onSuccess: () => navigate('/my-cars'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: EditFormData) => carsApi.update(Number(id), data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['car', id] });
+      setIsEditing(false);
+      setEditError('');
+      setEditSuccess(t('cars.carUpdated'));
+      setTimeout(() => setEditSuccess(''), 3000);
+    },
+    onError: (err: any) => {
+      setEditError(err.response?.data?.error || t('cars.failedUpdate'));
+    },
   });
 
   const deleteImageMutation = useMutation({
@@ -43,8 +80,33 @@ export default function CarDetailPage() {
     }
   };
 
+  const startEditing = () => {
+    if (!car) return;
+    reset({
+      make: car.make,
+      model: car.model,
+      year: car.year,
+      mileage: car.mileage,
+      vin: car.vin || '',
+      color: car.color || '',
+      condition: car.condition || '',
+      description: car.description || '',
+      askingPrice: car.askingPrice ?? undefined,
+    });
+    setEditError('');
+    setEditSuccess('');
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditError('');
+  };
+
   if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
   if (!car) return <div className="text-center py-12 text-red-500">{t('cars.carNotFound')}</div>;
+
+  const isOwnerPending = car.userId === user?.id && car.status === 'Pending';
 
   const statusColors: Record<string, string> = {
     Pending: 'bg-yellow-100 text-yellow-800',
@@ -64,12 +126,22 @@ export default function CarDetailPage() {
             {t(`carStatus.${car.status}`)}
           </span>
         </div>
-        {car.userId === user?.id && car.status === 'Pending' && (
-          <button onClick={() => deleteMutation.mutate()} className="text-red-600 hover:text-red-800 text-sm">
-            {t('common.delete')}
-          </button>
+        {isOwnerPending && (
+          <div className="flex gap-3">
+            {!isEditing && (
+              <button onClick={startEditing} className="text-blue-600 hover:text-blue-800 text-sm">
+                {t('cars.edit')}
+              </button>
+            )}
+            <button onClick={() => deleteMutation.mutate()} className="text-red-600 hover:text-red-800 text-sm">
+              {t('common.delete')}
+            </button>
+          </div>
         )}
       </div>
+
+      {editSuccess && <div className="bg-green-50 text-green-600 p-3 rounded-lg mb-4">{editSuccess}</div>}
+      {editError && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4">{editError}</div>}
 
       {/* Images */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
@@ -96,7 +168,13 @@ export default function CarDetailPage() {
         )}
         {car.userId === user?.id && car.images.length < 10 && (
           <div className="mt-4">
-            <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="text-sm" disabled={uploading} />
+            <label className="inline-flex items-center gap-2 cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+              </svg>
+              {t('cars.addPhotos')}
+              <input type="file" className="hidden" accept="image/*" multiple onChange={handleImageUpload} disabled={uploading} />
+            </label>
             {uploading && <p className="text-sm text-blue-600 mt-1">{t('cars.uploading')}</p>}
           </div>
         )}
@@ -104,18 +182,92 @@ export default function CarDetailPage() {
 
       {/* Details */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">{t('cars.details')}</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-gray-500">{t('cars.make')}:</span> <span className="font-medium">{car.make}</span></div>
-          <div><span className="text-gray-500">{t('cars.model')}:</span> <span className="font-medium">{car.model}</span></div>
-          <div><span className="text-gray-500">{t('cars.year')}:</span> <span className="font-medium">{car.year}</span></div>
-          <div><span className="text-gray-500">{t('cars.mileage')}:</span> <span className="font-medium">{car.mileage.toLocaleString()} {t('common.miles')}</span></div>
-          {car.vin && <div><span className="text-gray-500">{t('cars.vin')}:</span> <span className="font-medium">{car.vin}</span></div>}
-          {car.color && <div><span className="text-gray-500">{t('cars.color')}:</span> <span className="font-medium">{car.color}</span></div>}
-          {car.condition && <div><span className="text-gray-500">{t('cars.condition')}:</span> <span className="font-medium">{car.condition}</span></div>}
-          {car.askingPrice && <div><span className="text-gray-500">{t('cars.askingPrice')}:</span> <span className="font-medium text-green-600">${car.askingPrice.toLocaleString()}</span></div>}
-        </div>
-        {car.description && <p className="mt-4 text-gray-700">{car.description}</p>}
+        <h2 className="text-lg font-semibold mb-4">{isEditing ? t('cars.editing') : t('cars.details')}</h2>
+
+        {isEditing ? (
+          <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.make')} *</label>
+                <input {...register('make')} placeholder={t('cars.makePlaceholder')} className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+                {errors.make && <p className="text-red-500 text-sm mt-1">{errors.make.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.model')} *</label>
+                <input {...register('model')} placeholder={t('cars.modelPlaceholder')} className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+                {errors.model && <p className="text-red-500 text-sm mt-1">{errors.model.message}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.year')} *</label>
+                <input {...register('year')} type="number" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+                {errors.year && <p className="text-red-500 text-sm mt-1">{errors.year.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.mileage')} *</label>
+                <input {...register('mileage')} type="number" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+                {errors.mileage && <p className="text-red-500 text-sm mt-1">{errors.mileage.message}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.vin')}</label>
+                <input {...register('vin')} className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.color')}</label>
+                <input {...register('color')} className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.condition')}</label>
+              <select {...register('condition')} className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="">{t('cars.selectCondition')}</option>
+                <option value="Excellent">{t('cars.excellent')}</option>
+                <option value="Good">{t('cars.good')}</option>
+                <option value="Fair">{t('cars.fair')}</option>
+                <option value="Poor">{t('cars.poor')}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.description')}</label>
+              <textarea {...register('description')} rows={4} className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder={t('cars.descPlaceholder')} />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.askingPrice')}</label>
+              <input {...register('askingPrice')} type="number" step="0.01" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+            </div>
+
+            <div className="flex gap-3">
+              <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition font-semibold">
+                {isSubmitting ? t('cars.editing') : t('cars.saveChanges')}
+              </button>
+              <button type="button" onClick={cancelEditing} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition font-semibold">
+                {t('cars.cancel')}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div><span className="text-gray-500">{t('cars.make')}:</span> <span className="font-medium">{car.make}</span></div>
+              <div><span className="text-gray-500">{t('cars.model')}:</span> <span className="font-medium">{car.model}</span></div>
+              <div><span className="text-gray-500">{t('cars.year')}:</span> <span className="font-medium">{car.year}</span></div>
+              <div><span className="text-gray-500">{t('cars.mileage')}:</span> <span className="font-medium">{car.mileage.toLocaleString()} {t('common.miles')}</span></div>
+              {car.vin && <div><span className="text-gray-500">{t('cars.vin')}:</span> <span className="font-medium">{car.vin}</span></div>}
+              {car.color && <div><span className="text-gray-500">{t('cars.color')}:</span> <span className="font-medium">{car.color}</span></div>}
+              {car.condition && <div><span className="text-gray-500">{t('cars.condition')}:</span> <span className="font-medium">{car.condition}</span></div>}
+              {car.askingPrice && <div><span className="text-gray-500">{t('cars.askingPrice')}:</span> <span className="font-medium text-green-600">${car.askingPrice.toLocaleString()}</span></div>}
+            </div>
+            {car.description && <p className="mt-4 text-gray-700">{car.description}</p>}
+          </>
+        )}
       </div>
 
       {/* Offers */}

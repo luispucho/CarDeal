@@ -123,7 +123,15 @@
     "uploading": "Uploading...",
     "makePlaceholder": "e.g. Toyota",
     "modelPlaceholder": "e.g. Camry",
-    "from": "From"
+    "from": "From",
+    "edit": "Edit",
+    "editing": "Editing...",
+    "saveChanges": "Save Changes",
+    "cancel": "Cancel",
+    "carUpdated": "Car updated successfully!",
+    "failedUpdate": "Failed to update car",
+    "addPhotos": "Add Photos",
+    "dragOrClick": "Click to add photos"
   },
   "carStatus": {
     "Pending": "Pending",
