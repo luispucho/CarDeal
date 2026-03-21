@@ -131,7 +131,8 @@
     "carUpdated": "¡Auto actualizado exitosamente!",
     "failedUpdate": "Error al actualizar el auto",
     "addPhotos": "Agregar Fotos",
-    "dragOrClick": "Haz clic para agregar fotos"
+    "dragOrClick": "Haz clic para agregar fotos",
+    "confirmDeletePhoto": "¿Estás seguro de que quieres eliminar esta foto?"
   },
   "carStatus": {
     "Pending": "Pendiente",

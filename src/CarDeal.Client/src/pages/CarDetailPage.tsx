@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -31,6 +31,7 @@ export default function CarDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data: car, isLoading } = useQuery({
     queryKey: ['car', id],
@@ -66,7 +67,19 @@ export default function CarDetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['car', id] }),
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowRight') setLightboxIndex(prev => prev !== null ? (prev + 1) % car!.images.length : null);
+      if (e.key === 'ArrowLeft') setLightboxIndex(prev => prev !== null ? (prev - 1 + car!.images.length) % car!.images.length : null);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [lightboxIndex, car?.images.length]);
+
+  const handleImageUpload= async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
     setUploading(true);
@@ -150,10 +163,10 @@ export default function CarDetailPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {car.images.map((img) => (
               <div key={img.id} className="relative group">
-                <img src={img.blobUrl} alt={img.fileName} className="w-full h-32 object-cover rounded-lg" />
+                <img src={img.blobUrl} alt={img.fileName} className="w-full h-32 object-cover rounded-lg cursor-pointer" onClick={() => setLightboxIndex(car.images.indexOf(img))} />
                 {car.userId === user?.id && (
                   <button
-                    onClick={() => deleteImageMutation.mutate(img.id)}
+                    onClick={() => { if (window.confirm(t('cars.confirmDeletePhoto'))) deleteImageMutation.mutate(img.id); }}
                     className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition"
                   >
                     ✕
@@ -290,6 +303,59 @@ export default function CarDetailPage() {
                   {t(`offerStatus.${offer.status}`)}
                 </span>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && car.images.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center" onClick={() => setLightboxIndex(null)}>
+          {/* Close button */}
+          <button className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300 z-10" onClick={() => setLightboxIndex(null)}>✕</button>
+
+          {/* Main image */}
+          <div className="flex-1 flex items-center justify-center w-full px-16 py-4" onClick={(e) => e.stopPropagation()}>
+            {/* Left arrow */}
+            {car.images.length > 1 && (
+              <button
+                className="absolute left-4 text-white text-4xl hover:text-gray-300 select-none"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + car.images.length) % car.images.length); }}
+              >
+                ‹
+              </button>
+            )}
+
+            <img
+              src={car.images[lightboxIndex].blobUrl}
+              alt={car.images[lightboxIndex].fileName}
+              className="max-h-[70vh] max-w-full object-contain rounded-lg"
+            />
+
+            {/* Right arrow */}
+            {car.images.length > 1 && (
+              <button
+                className="absolute right-4 text-white text-4xl hover:text-gray-300 select-none"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % car.images.length); }}
+              >
+                ›
+              </button>
+            )}
+          </div>
+
+          {/* Image counter */}
+          <p className="text-white text-sm mb-2">{lightboxIndex + 1} / {car.images.length}</p>
+
+          {/* Thumbnail strip */}
+          <div className="flex gap-2 pb-4 px-4 overflow-x-auto" onClick={(e) => e.stopPropagation()}>
+            {car.images.map((img, idx) => (
+              <img
+                key={img.id}
+                src={img.blobUrl}
+                alt={img.fileName}
+                className={`h-16 w-20 object-cover rounded cursor-pointer transition ${idx === lightboxIndex ? 'ring-2 ring-white opacity-100' : 'opacity-50 hover:opacity-80'}`}
+                onClick={() => setLightboxIndex(idx)}
+              />
             ))}
           </div>
         </div>
