@@ -94,6 +94,49 @@ public class PublicController : ControllerBase
         return car == null ? NotFound() : Ok(MapToPublic(car));
     }
 
+    [HttpGet("branding/{tenantSlug}")]
+    public async Task<ActionResult<TenantBrandingResponse>> GetTenantBranding(string tenantSlug)
+    {
+        var tenant = await _db.Tenants
+            .Include(t => t.Branding)
+            .FirstOrDefaultAsync(t => t.Slug == tenantSlug);
+
+        if (tenant == null) return NotFound();
+
+        var branding = tenant.Branding;
+        if (branding == null)
+            return Ok(new TenantBrandingResponse(
+                0, tenant.Id, tenant.Name, tenant.Tier.ToString(),
+                "#2563eb", "#1e40af", "#3b82f6", "#1f2937", "#ffffff",
+                null, null, tenant.Name, null, null, null));
+
+        return Ok(new TenantBrandingResponse(
+            branding.Id, branding.TenantId, tenant.Name, tenant.Tier.ToString(),
+            branding.PrimaryColor, branding.SecondaryColor, branding.AccentColor,
+            branding.TextColor, branding.BackgroundColor,
+            branding.LogoUrl, branding.FaviconUrl, branding.DealerName, branding.Tagline,
+            branding.LandingLayoutJson, branding.CustomDomain));
+    }
+
+    [HttpGet("tenants")]
+    public async Task<IActionResult> GetTenants()
+    {
+        var tenants = await _db.Tenants
+            .Include(t => t.Branding)
+            .OrderBy(t => t.Name)
+            .Select(t => new
+            {
+                t.Id,
+                t.Name,
+                t.Slug,
+                LogoUrl = t.Branding != null ? t.Branding.LogoUrl : t.LogoUrl,
+                Tier = t.Tier.ToString()
+            })
+            .ToListAsync();
+
+        return Ok(tenants);
+    }
+
     private static PublicCarResponse MapToPublic(Car car) => new(
         car.Id, car.Make, car.Model, car.Year, car.Mileage,
         car.Color, car.Condition, car.Description, car.AskingPrice,

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using CarDeal.Api.Data;
 using CarDeal.Api.DTOs;
 using CarDeal.Api.Models;
+using CarDeal.Api.Middleware;
 using CarDeal.Api.Services;
 
 namespace CarDeal.Api.Controllers;
@@ -18,12 +19,14 @@ public class CrmController : ControllerBase
     private readonly AppDbContext _db;
     private readonly UserManager<User> _userManager;
     private readonly IPublishingService _publishingService;
+    private readonly IBlobStorageService _blobService;
 
-    public CrmController(AppDbContext db, UserManager<User> userManager, IPublishingService publishingService)
+    public CrmController(AppDbContext db, UserManager<User> userManager, IPublishingService publishingService, IBlobStorageService blobService)
     {
         _db = db;
         _userManager = userManager;
         _publishingService = publishingService;
+        _blobService = blobService;
     }
 
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -505,6 +508,7 @@ public class CrmController : ControllerBase
 
     [HttpGet("connections")]
     [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    [RequireTier(TenantTier.Pro)]
     public async Task<ActionResult<List<PlatformConnectionResponse>>> GetConnections()
     {
         var tenantId = await GetRequiredTenantIdAsync();
@@ -525,6 +529,7 @@ public class CrmController : ControllerBase
 
     [HttpPost("connections")]
     [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    [RequireTier(TenantTier.Pro)]
     public async Task<ActionResult<PlatformConnectionResponse>> CreateConnection(CreateConnectionRequest request)
     {
         var tenantId = await GetRequiredTenantIdAsync();
@@ -563,6 +568,7 @@ public class CrmController : ControllerBase
 
     [HttpPut("connections/{id}")]
     [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    [RequireTier(TenantTier.Pro)]
     public async Task<ActionResult<PlatformConnectionResponse>> UpdateConnection(int id, UpdateConnectionRequest request)
     {
         var tenantId = await GetRequiredTenantIdAsync();
@@ -594,6 +600,7 @@ public class CrmController : ControllerBase
 
     [HttpDelete("connections/{id}")]
     [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    [RequireTier(TenantTier.Pro)]
     public async Task<IActionResult> DeleteConnection(int id)
     {
         var tenantId = await GetRequiredTenantIdAsync();
@@ -613,6 +620,7 @@ public class CrmController : ControllerBase
     // ─── Publishing ──────────────────────────────────────────────
 
     [HttpGet("inventory/{carId}/publications")]
+    [RequireTier(TenantTier.Pro)]
     public async Task<ActionResult<List<CarPublicationResponse>>> GetPublications(int carId)
     {
         var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
@@ -633,6 +641,7 @@ public class CrmController : ControllerBase
     }
 
     [HttpPost("inventory/{carId}/publish")]
+    [RequireTier(TenantTier.Pro)]
     public async Task<ActionResult<CarPublicationResponse>> PublishCar(int carId, PublishRequest request)
     {
         var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
@@ -662,6 +671,7 @@ public class CrmController : ControllerBase
     }
 
     [HttpPut("publications/{id}/update")]
+    [RequireTier(TenantTier.Pro)]
     public async Task<ActionResult<CarPublicationResponse>> UpdatePublication(int id)
     {
         var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
@@ -690,6 +700,7 @@ public class CrmController : ControllerBase
     }
 
     [HttpPost("publications/{id}/unpublish")]
+    [RequireTier(TenantTier.Pro)]
     public async Task<ActionResult<CarPublicationResponse>> UnpublishCar(int id)
     {
         var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
@@ -752,4 +763,149 @@ public class CrmController : ControllerBase
         p.Connection.Platform.Name, p.Connection.Platform.Slug,
         p.Status.ToString(), p.ExternalListingId, p.ExternalUrl, p.ErrorMessage,
         p.PublishedAt, p.UnpublishedAt);
+
+    // ─── Branding ────────────────────────────────────────────────
+
+    [HttpGet("branding")]
+    [Authorize(Roles = "TenantAdmin,Admin")]
+    public async Task<ActionResult<TenantBrandingResponse>> GetBranding()
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue) return Forbid();
+
+        var tenant = await _db.Tenants
+            .Include(t => t.Branding)
+            .FirstOrDefaultAsync(t => t.Id == tenantId.Value);
+
+        if (tenant == null) return NotFound();
+
+        var branding = tenant.Branding ?? await CreateDefaultBrandingAsync(tenant);
+
+        return Ok(MapToBrandingResponse(branding, tenant));
+    }
+
+    [HttpPut("branding")]
+    [Authorize(Roles = "TenantAdmin,Admin")]
+    public async Task<ActionResult<TenantBrandingResponse>> UpdateBranding(UpdateBrandingRequest request)
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue) return Forbid();
+
+        var tenant = await _db.Tenants
+            .Include(t => t.Branding)
+            .FirstOrDefaultAsync(t => t.Id == tenantId.Value);
+
+        if (tenant == null) return NotFound();
+
+        var branding = tenant.Branding ?? await CreateDefaultBrandingAsync(tenant);
+
+        // Basic tier: colors, dealer name, tagline
+        if (request.PrimaryColor != null) branding.PrimaryColor = request.PrimaryColor;
+        if (request.SecondaryColor != null) branding.SecondaryColor = request.SecondaryColor;
+        if (request.AccentColor != null) branding.AccentColor = request.AccentColor;
+        if (request.TextColor != null) branding.TextColor = request.TextColor;
+        if (request.BackgroundColor != null) branding.BackgroundColor = request.BackgroundColor;
+        if (request.DealerName != null) branding.DealerName = request.DealerName;
+        if (request.Tagline != null) branding.Tagline = request.Tagline;
+
+        // Pro+ tier: layout editor
+        if (request.LandingLayoutJson != null)
+        {
+            if (tenant.Tier < TenantTier.Pro)
+                return BadRequest(new { message = "Landing page layout customization requires Pro tier or higher." });
+            branding.LandingLayoutJson = request.LandingLayoutJson;
+        }
+
+        // Enterprise tier: custom domain
+        if (request.CustomDomain != null)
+        {
+            if (tenant.Tier < TenantTier.Enterprise)
+                return BadRequest(new { message = "Custom domain requires Enterprise tier." });
+            branding.CustomDomain = request.CustomDomain;
+        }
+
+        branding.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(MapToBrandingResponse(branding, tenant));
+    }
+
+    [HttpPost("branding/logo")]
+    [Authorize(Roles = "TenantAdmin,Admin")]
+    public async Task<ActionResult<TenantBrandingResponse>> UploadLogo(IFormFile file)
+    {
+        if (file.Length == 0) return BadRequest(new { message = "No file provided." });
+        if (file.Length > 2 * 1024 * 1024) return BadRequest(new { message = "Logo must be under 2MB." });
+
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue) return Forbid();
+
+        var tenant = await _db.Tenants
+            .Include(t => t.Branding)
+            .FirstOrDefaultAsync(t => t.Id == tenantId.Value);
+
+        if (tenant == null) return NotFound();
+
+        var branding = tenant.Branding ?? await CreateDefaultBrandingAsync(tenant);
+
+        // Delete old logo if exists
+        if (!string.IsNullOrEmpty(branding.LogoUrl))
+            await _blobService.DeleteAsync(branding.LogoUrl);
+
+        using var stream = file.OpenReadStream();
+        branding.LogoUrl = await _blobService.UploadAsync(
+            stream,
+            $"tenant-{tenantId}-logo{Path.GetExtension(file.FileName)}",
+            file.ContentType);
+        branding.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(MapToBrandingResponse(branding, tenant));
+    }
+
+    [HttpDelete("branding/logo")]
+    [Authorize(Roles = "TenantAdmin,Admin")]
+    public async Task<ActionResult<TenantBrandingResponse>> DeleteLogo()
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue) return Forbid();
+
+        var tenant = await _db.Tenants
+            .Include(t => t.Branding)
+            .FirstOrDefaultAsync(t => t.Id == tenantId.Value);
+
+        if (tenant == null) return NotFound();
+
+        var branding = tenant.Branding;
+        if (branding == null || string.IsNullOrEmpty(branding.LogoUrl))
+            return BadRequest(new { message = "No logo to remove." });
+
+        await _blobService.DeleteAsync(branding.LogoUrl);
+        branding.LogoUrl = null;
+        branding.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(MapToBrandingResponse(branding, tenant));
+    }
+
+    private async Task<TenantBranding> CreateDefaultBrandingAsync(Tenant tenant)
+    {
+        var branding = new TenantBranding
+        {
+            TenantId = tenant.Id,
+            DealerName = tenant.Name,
+            LandingLayoutJson = "[\"hero\",\"featured\",\"inventory\",\"about\",\"contact\"]"
+        };
+        _db.TenantBrandings.Add(branding);
+        await _db.SaveChangesAsync();
+        tenant.Branding = branding;
+        return branding;
+    }
+
+    private static TenantBrandingResponse MapToBrandingResponse(TenantBranding b, Tenant t) => new(
+        b.Id, b.TenantId, t.Name, t.Tier.ToString(),
+        b.PrimaryColor, b.SecondaryColor, b.AccentColor,
+        b.TextColor, b.BackgroundColor,
+        b.LogoUrl, b.FaviconUrl, b.DealerName, b.Tagline,
+        b.LandingLayoutJson, b.CustomDomain);
 }

@@ -313,6 +313,13 @@
     "userRemoved": "Usuario removido del inquilino",
     "soldBy": "Vendido por"
   },
+  "tierGate": {
+    "title": "¡Ups! A este auto le falta una llanta",
+    "message": "Esta función no está disponible en tu plan actual. ¡Actualiza para desbloquearla!",
+    "currentTier": "Tu Plan",
+    "requiredTier": "Plan Requerido",
+    "contact": "Contacta al administrador de la plataforma para actualizar tu plan"
+  },
   "crm": {
     "title": "CRM",
     "dashboard": "Panel",
@@ -410,6 +417,36 @@
     "updateSuccess": "¡Listado actualizado!",
     "noConnections": "No hay conexiones configuradas. Pida a su administrador que configure las conexiones.",
     "enable": "Habilitar",
-    "disable": "Deshabilitar"
+    "disable": "Deshabilitar",
+    "branding": "Marca",
+    "brandColors": "Colores de Marca",
+    "primaryColor": "Color Primario",
+    "secondaryColor": "Color Secundario",
+    "accentColor": "Color de Acento",
+    "textColor": "Color de Texto",
+    "backgroundColor": "Color de Fondo",
+    "dealerName": "Nombre del Dealer",
+    "tagline": "Eslogan",
+    "logo": "Logo",
+    "uploadLogo": "Subir Logo",
+    "removeLogo": "Eliminar Logo",
+    "landingLayout": "Diseño de Página Principal",
+    "dragToReorder": "Arrastra las secciones para reordenar tu página principal",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "customDomain": "Dominio Personalizado",
+    "brandingSaved": "¡Marca guardada!",
+    "logoUploaded": "¡Logo subido!",
+    "logoRemoved": "Logo eliminado",
+    "layoutSaved": "¡Diseño guardado!",
+    "hero": "Banner Principal",
+    "featuredSection": "Autos Destacados",
+    "inventorySection": "Vista de Inventario",
+    "aboutSection": "Sobre Nosotros",
+    "contactSection": "Contacto",
+    "preview": "Vista Previa",
+    "tierBasic": "Básico",
+    "tierPro": "Pro",
+    "tierEnterprise": "Empresa"
   }
 }

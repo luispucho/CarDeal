@@ -21,6 +21,7 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<ExternalPlatform> ExternalPlatforms => Set<ExternalPlatform>();
     public DbSet<PlatformConnection> PlatformConnections => Set<PlatformConnection>();
     public DbSet<CarPublication> CarPublications => Set<CarPublication>();
+    public DbSet<TenantBranding> TenantBrandings => Set<TenantBranding>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -65,6 +66,14 @@ public class AppDbContext : IdentityDbContext<User>
         builder.Entity<Tenant>(e =>
         {
             e.HasIndex(t => t.Slug).IsUnique();
+            e.HasOne(t => t.Branding).WithOne(b => b.Tenant)
+                .HasForeignKey<TenantBranding>(b => b.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<TenantBranding>(e =>
+        {
+            e.HasIndex(b => b.TenantId).IsUnique();
         });
 
         builder.Entity<User>(e =>

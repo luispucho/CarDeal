@@ -50,6 +50,16 @@ public class TenantController : ControllerBase
         _db.Tenants.Add(tenant);
         await _db.SaveChangesAsync();
 
+        // Auto-create default branding
+        var branding = new TenantBranding
+        {
+            TenantId = tenant.Id,
+            DealerName = tenant.Name,
+            LandingLayoutJson = "[\"hero\",\"featured\",\"inventory\",\"about\",\"contact\"]"
+        };
+        _db.TenantBrandings.Add(branding);
+        await _db.SaveChangesAsync();
+
         return CreatedAtAction(nameof(Get), new { id = tenant.Id }, MapToResponse(tenant));
     }
 
@@ -146,8 +156,26 @@ public class TenantController : ControllerBase
         return Ok(users);
     }
 
+    [HttpPut("{id}/tier")]
+    public async Task<ActionResult<TenantResponse>> UpdateTier(int id, UpdateTenantTierRequest request)
+    {
+        if (!Enum.TryParse<TenantTier>(request.Tier, true, out var tier))
+            return BadRequest(new { message = "Invalid tier. Must be Basic, Pro, or Enterprise." });
+
+        var tenant = await _db.Tenants
+            .Include(t => t.Users)
+            .Include(t => t.Cars)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (tenant == null) return NotFound();
+
+        tenant.Tier = tier;
+        await _db.SaveChangesAsync();
+        return Ok(MapToResponse(tenant));
+    }
+
     private static TenantResponse MapToResponse(Tenant t) => new(
         t.Id, t.Name, t.Slug, t.LogoUrl, t.ContactEmail,
-        t.CreatedAt, t.Users.Count, t.Cars.Count
+        t.Tier.ToString(), t.CreatedAt, t.Users.Count, t.Cars.Count
     );
 }

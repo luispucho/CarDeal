@@ -24,6 +24,13 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    // Surface tier-required errors so components can react
+    if (error.response?.status === 403 && error.response?.data?.error === 'tier_required') {
+      error.tierInfo = {
+        requiredTier: error.response.data.requiredTier,
+        currentTier: error.response.data.currentTier,
+      };
+    }
     return Promise.reject(error);
   }
 );
