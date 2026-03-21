@@ -27,6 +27,10 @@ public class Car
     public ICollection<CarImage> Images { get; set; } = new List<CarImage>();
     public ICollection<Offer> Offers { get; set; } = new List<Offer>();
     public Consignment? Consignment { get; set; }
+
+    public CarFinancials? Financials { get; set; }
+    public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
+    public ICollection<CrmNote> CrmNotes { get; set; } = new List<CrmNote>();
 }
 
 public enum ListingType

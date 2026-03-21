@@ -19,6 +19,10 @@ import TenantsPage from './pages/admin/TenantsPage';
 import InventoryPage from './pages/InventoryPage';
 import PublicCarDetailPage from './pages/PublicCarDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
+import CrmDashboardPage from './pages/crm/CrmDashboardPage';
+import CrmInventoryPage from './pages/crm/CrmInventoryPage';
+import CrmCarDetailPage from './pages/crm/CrmCarDetailPage';
+import CrmEmployeesPage from './pages/crm/CrmEmployeesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +81,22 @@ export default function App() {
               <Route
                 path="/admin/tenants"
                 element={<ProtectedRoute requireAdmin><TenantsPage /></ProtectedRoute>}
+              />
+              <Route
+                path="/crm"
+                element={<ProtectedRoute><CrmDashboardPage /></ProtectedRoute>}
+              />
+              <Route
+                path="/crm/inventory"
+                element={<ProtectedRoute><CrmInventoryPage /></ProtectedRoute>}
+              />
+              <Route
+                path="/crm/inventory/:id"
+                element={<ProtectedRoute><CrmCarDetailPage /></ProtectedRoute>}
+              />
+              <Route
+                path="/crm/employees"
+                element={<ProtectedRoute><CrmEmployeesPage /></ProtectedRoute>}
               />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

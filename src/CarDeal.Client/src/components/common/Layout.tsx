@@ -71,6 +71,9 @@ export default function Layout() {
                       {t('nav.tenants')}
                     </Link>
                   )}
+                  <Link to="/crm" className="text-gray-700 hover:text-blue-600 transition font-medium">
+                    📊 {t('nav.crm')}
+                  </Link>
                 </>
               )}
             </div>
