@@ -1,0 +1,164 @@
+import apiClient from './client';
+
+// ── Response types ──
+
+export interface CrmCarFinancials {
+  id: number;
+  carId: number;
+  purchasePrice?: number;
+  salePrice?: number;
+  notes?: string;
+  totalExpenses: number;
+  profit?: number;
+}
+
+export interface CrmCarImage {
+  id: number;
+  blobUrl: string;
+  fileName: string;
+  isPrimary: boolean;
+  uploadedAt: string;
+}
+
+export interface CrmCarResponse {
+  id: number;
+  make: string;
+  model: string;
+  year: number;
+  mileage: number;
+  color?: string;
+  condition?: string;
+  askingPrice?: number;
+  status: string;
+  listingType: string;
+  isFeatured: boolean;
+  userName?: string;
+  createdAt: string;
+  financials?: CrmCarFinancials;
+  images: CrmCarImage[];
+  expenseCount: number;
+  totalExpenses: number;
+}
+
+export interface ExpenseResponse {
+  id: number;
+  carId: number;
+  type: string;
+  amount: number;
+  description?: string;
+  date: string;
+}
+
+export interface CrmNoteResponse {
+  id: number;
+  carId: number;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface EmployeeResponse {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+}
+
+export interface TenantStatsResponse {
+  totalCars: number;
+  soldCars: number;
+  consignedCars: number;
+  pendingCars: number;
+  activeInventory: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  totalProfit: number;
+  topProfitableCars: { carId: number; carName: string; profit?: number }[];
+  expensesByType: { type: string; total: number }[];
+  monthlySales: { month: string; count: number; revenue: number }[];
+}
+
+export interface PlatformStatsResponse {
+  totalTenants: number;
+  totalCars: number;
+  totalSold: number;
+  totalActive: number;
+  salesByTenant: { tenantId: number; tenantName: string; totalCars: number; soldCars: number; revenue: number }[];
+  topBrands: { make: string; count: number; soldCount: number }[];
+  totalRevenue: number;
+}
+
+// ── Request types ──
+
+export interface UpdateFinancialsRequest {
+  purchasePrice?: number;
+  salePrice?: number;
+  notes?: string;
+}
+
+export interface CreateExpenseRequest {
+  type: string;
+  amount: number;
+  description?: string;
+  date?: string;
+}
+
+export interface CreateNoteRequest {
+  content: string;
+}
+
+export interface AddEmployeeRequest {
+  email: string;
+}
+
+// ── API client ──
+
+export const crmApi = {
+  // Inventory
+  getInventory: () =>
+    apiClient.get<CrmCarResponse[]>('/crm/inventory').then((r) => r.data),
+
+  getCarById: (id: number) =>
+    apiClient.get<CrmCarResponse>(`/crm/inventory/${id}`).then((r) => r.data),
+
+  updateFinancials: (id: number, data: UpdateFinancialsRequest) =>
+    apiClient.put(`/crm/inventory/${id}/financials`, data).then((r) => r.data),
+
+  // Expenses
+  getExpenses: (carId: number) =>
+    apiClient.get<ExpenseResponse[]>(`/crm/inventory/${carId}/expenses`).then((r) => r.data),
+
+  addExpense: (carId: number, data: CreateExpenseRequest) =>
+    apiClient.post<ExpenseResponse>(`/crm/inventory/${carId}/expenses`, data).then((r) => r.data),
+
+  deleteExpense: (carId: number, expenseId: number) =>
+    apiClient.delete(`/crm/inventory/${carId}/expenses/${expenseId}`).then((r) => r.data),
+
+  // Notes
+  getNotes: (carId: number) =>
+    apiClient.get<CrmNoteResponse[]>(`/crm/inventory/${carId}/notes`).then((r) => r.data),
+
+  addNote: (carId: number, data: CreateNoteRequest) =>
+    apiClient.post<CrmNoteResponse>(`/crm/inventory/${carId}/notes`, data).then((r) => r.data),
+
+  // Employees
+  getEmployees: () =>
+    apiClient.get<EmployeeResponse[]>('/crm/employees').then((r) => r.data),
+
+  addEmployee: (data: AddEmployeeRequest) =>
+    apiClient.post<EmployeeResponse>('/crm/employees', data).then((r) => r.data),
+
+  removeEmployee: (userId: string) =>
+    apiClient.delete(`/crm/employees/${userId}`).then((r) => r.data),
+
+  // Stats
+  getTenantStats: () =>
+    apiClient.get<TenantStatsResponse>('/crm/stats').then((r) => r.data),
+
+  getPlatformStats: () =>
+    apiClient.get<PlatformStatsResponse>('/crm/admin/stats').then((r) => r.data),
+
+  resetTenantAdmin: (tenantId: number) =>
+    apiClient.post(`/crm/admin/tenants/${tenantId}/reset-admin`).then((r) => r.data),
+};

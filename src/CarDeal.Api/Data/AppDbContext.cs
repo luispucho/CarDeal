@@ -15,6 +15,9 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<Consignment> Consignments => Set<Consignment>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
+    public DbSet<CarFinancials> CarFinancials => Set<CarFinancials>();
+    public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<CrmNote> CrmNotes => Set<CrmNote>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -77,6 +80,28 @@ public class AppDbContext : IdentityDbContext<User>
         {
             e.HasKey(s => s.Key);
             e.HasData(new SiteSetting { Key = "Language", Value = "en" });
+        });
+
+        builder.Entity<CarFinancials>(e =>
+        {
+            e.HasOne(cf => cf.Car).WithOne(c => c.Financials).HasForeignKey<CarFinancials>(cf => cf.CarId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(cf => cf.CarId).IsUnique();
+            e.Property(cf => cf.PurchasePrice).HasColumnType("decimal(18,2)");
+            e.Property(cf => cf.SalePrice).HasColumnType("decimal(18,2)");
+        });
+
+        builder.Entity<Expense>(e =>
+        {
+            e.HasOne(ex => ex.Car).WithMany(c => c.Expenses).HasForeignKey(ex => ex.CarId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(ex => ex.CarId);
+            e.Property(ex => ex.Amount).HasColumnType("decimal(18,2)");
+        });
+
+        builder.Entity<CrmNote>(e =>
+        {
+            e.HasOne(n => n.Car).WithMany(c => c.CrmNotes).HasForeignKey(n => n.CarId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(n => n.Author).WithMany().HasForeignKey(n => n.AuthorUserId).OnDelete(DeleteBehavior.NoAction);
+            e.HasIndex(n => n.CarId);
         });
     }
 }

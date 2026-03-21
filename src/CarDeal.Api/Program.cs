@@ -140,7 +140,7 @@ _ = Task.Run(async () =>
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<User>>();
 
-        string[] roles = { "Admin", "User", "SuperAdmin" };
+        string[] roles = { "Admin", "User", "SuperAdmin", "TenantAdmin" };
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
