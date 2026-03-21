@@ -220,5 +220,28 @@
     "period": "Period",
     "markSold": "Mark Sold",
     "cancel": "Cancel"
+  },
+  "profile": {
+    "title": "My Profile",
+    "avatar": "Profile Picture",
+    "uploadPicture": "Upload Picture",
+    "changePicture": "Change Picture",
+    "removePicture": "Remove Picture",
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "email": "Email",
+    "memberSince": "Member Since",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "saved": "Profile updated successfully!",
+    "error": "Failed to update profile",
+    "pictureUploaded": "Picture uploaded!",
+    "pictureRemoved": "Picture removed",
+    "pictureError": "Failed to update picture"
+  },
+  "socialLogin": {
+    "orContinueWith": "or continue with",
+    "google": "Continue with Google",
+    "github": "Continue with GitHub"
   }
 }

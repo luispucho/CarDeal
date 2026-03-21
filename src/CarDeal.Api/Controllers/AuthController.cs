@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -68,6 +69,54 @@ public class AuthController : ControllerBase
         return Ok(await GenerateAuthResponse(user));
     }
 
+    [HttpGet("external/{provider}")]
+    public IActionResult ExternalLogin(string provider, [FromQuery] string? returnUrl = null)
+    {
+        var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Auth", new { provider, returnUrl });
+        var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+        return Challenge(properties, provider);
+    }
+
+    [HttpGet("external/{provider}/callback")]
+    public async Task<IActionResult> ExternalLoginCallback(string provider, string? returnUrl = null)
+    {
+        var info = await HttpContext.AuthenticateAsync(provider);
+        if (info?.Principal == null)
+            return Redirect($"{GetClientUrl(returnUrl)}/login?error=external_login_failed");
+
+        var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+        var name = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email ?? "User";
+
+        if (string.IsNullOrEmpty(email))
+            return Redirect($"{GetClientUrl(returnUrl)}/login?error=email_not_provided");
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            user = new User
+            {
+                UserName = email,
+                Email = email,
+                FullName = name,
+                EmailConfirmed = true
+            };
+            var result = await _userManager.CreateAsync(user);
+            if (!result.Succeeded)
+                return Redirect($"{GetClientUrl(returnUrl)}/login?error=registration_failed");
+            await _userManager.AddToRoleAsync(user, "User");
+        }
+
+        var authResponse = await GenerateAuthResponse(user);
+        var clientUrl = GetClientUrl(returnUrl);
+        return Redirect($"{clientUrl}/login?token={authResponse.Token}&refreshToken={authResponse.RefreshToken}&user={Uri.EscapeDataString(System.Text.Json.JsonSerializer.Serialize(authResponse.User))}");
+    }
+
+    private string GetClientUrl(string? returnUrl)
+    {
+        return _configuration.GetSection("Cors:Origins").Get<string[]>()?.FirstOrDefault()
+            ?? returnUrl ?? "http://localhost:5173";
+    }
+
     private async Task<AuthResponse> GenerateAuthResponse(User user)
     {
         var roles = await _userManager.GetRolesAsync(user);
@@ -106,7 +155,7 @@ public class AuthController : ControllerBase
             new JwtSecurityTokenHandler().WriteToken(token),
             new JwtSecurityTokenHandler().WriteToken(refreshToken),
             expiration,
-            new UserDto(user.Id, user.Email!, user.FullName, user.Phone, role)
+            new UserDto(user.Id, user.Email!, user.FullName, user.Phone, user.ProfilePictureUrl, role)
         );
     }
 

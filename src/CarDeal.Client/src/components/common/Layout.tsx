@@ -55,6 +55,9 @@ export default function Layout() {
                       </span>
                     )}
                   </Link>
+                  <Link to="/profile" className="text-gray-700 hover:text-blue-600 transition">
+                    {t('profile.title')}
+                  </Link>
                   {isAdmin && (
                     <Link to="/admin" className="text-gray-700 hover:text-blue-600 transition font-medium">
                       {t('nav.adminLink')}
@@ -66,9 +69,16 @@ export default function Layout() {
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <>
-                  <span className="text-sm text-gray-600">
-                    {user?.fullName} {isAdmin && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{t('nav.adminBadge')}</span>}
-                  </span>
+                  <Link to="/profile" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-blue-600 transition">
+                    {user?.profilePictureUrl ? (
+                      <img src={user.profilePictureUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                    ) : (
+                      <span className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                        {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </span>
+                    )}
+                    <span>{user?.fullName} {isAdmin && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{t('nav.adminBadge')}</span>}</span>
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="text-sm text-red-600 hover:text-red-800 transition"

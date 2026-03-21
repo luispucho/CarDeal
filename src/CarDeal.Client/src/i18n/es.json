@@ -220,5 +220,28 @@
     "period": "Período",
     "markSold": "Marcar Vendido",
     "cancel": "Cancelar"
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "avatar": "Foto de Perfil",
+    "uploadPicture": "Subir Foto",
+    "changePicture": "Cambiar Foto",
+    "removePicture": "Eliminar Foto",
+    "fullName": "Nombre Completo",
+    "phone": "Número de Teléfono",
+    "email": "Correo Electrónico",
+    "memberSince": "Miembro Desde",
+    "save": "Guardar Cambios",
+    "saving": "Guardando...",
+    "saved": "¡Perfil actualizado exitosamente!",
+    "error": "Error al actualizar el perfil",
+    "pictureUploaded": "¡Foto subida!",
+    "pictureRemoved": "Foto eliminada",
+    "pictureError": "Error al actualizar la foto"
+  },
+  "socialLogin": {
+    "orContinueWith": "o continuar con",
+    "google": "Continuar con Google",
+    "github": "Continuar con GitHub"
   }
 }
