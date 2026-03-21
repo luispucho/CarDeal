@@ -156,8 +156,10 @@
   },
   "notFound": {
     "title": "404",
-    "message": "Page not found",
-    "goHome": "Go home"
+    "headline": "Oops! This road leads nowhere",
+    "message": "Looks like this car took a wrong turn and crashed into a dead end. Let's get you back on track!",
+    "redirecting": "Towing you back home in {{seconds}}s...",
+    "goHome": "Take me home now"
   },
   "adminDashboard": {
     "title": "Admin Dashboard",

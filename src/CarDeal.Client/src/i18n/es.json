@@ -156,8 +156,10 @@
   },
   "notFound": {
     "title": "404",
-    "message": "Página no encontrada",
-    "goHome": "Ir al inicio"
+    "headline": "¡Ups! Este camino no lleva a ningún lado",
+    "message": "Parece que este auto tomó un giro equivocado y chocó en un callejón sin salida. ¡Vamos a llevarte de vuelta!",
+    "redirecting": "Remolcándote al inicio en {{seconds}}s...",
+    "goHome": "Llévame al inicio"
   },
   "adminDashboard": {
     "title": "Panel de Administración",
