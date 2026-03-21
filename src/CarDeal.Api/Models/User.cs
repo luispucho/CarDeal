@@ -8,6 +8,9 @@ public class User : IdentityUser
     public string? ProfilePictureUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
+    public int? TenantId { get; set; }
+    public Tenant? Tenant { get; set; }
+    
     public ICollection<Car> Cars { get; set; } = new List<Car>();
     public ICollection<Message> SentMessages { get; set; } = new List<Message>();
     public ICollection<Message> ReceivedMessages { get; set; } = new List<Message>();

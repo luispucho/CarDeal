@@ -43,6 +43,8 @@ public record CarResponse(
     string Status,
     DateTime CreatedAt,
     DateTime UpdatedAt,
+    int? TenantId,
+    string? TenantName,
     List<CarImageResponse> Images,
     List<OfferResponse>? Offers
 );
@@ -58,6 +60,8 @@ public record PublicCarResponse(
     string? Description,
     decimal? AskingPrice,
     string ListingType,
+    string? TenantName,
+    int? TenantId,
     List<CarImageResponse> Images
 );
 

@@ -9,17 +9,30 @@ const ribbonStyles: Record<string, { bg: string; text: string }> = {
 
 interface Props {
   listingType: string;
+  tenantId?: number | null;
+  viewerTenantId?: number | null;
 }
 
-export default function ListingRibbon({ listingType }: Props) {
+export default function ListingRibbon({ listingType, tenantId, viewerTenantId }: Props) {
   const { t } = useTranslation();
-  const style = ribbonStyles[listingType];
+
+  let effectiveType = listingType;
+  if (
+    tenantId != null &&
+    viewerTenantId != null &&
+    tenantId !== viewerTenantId &&
+    (listingType === 'Inventory' || listingType === 'CertifiedInventory')
+  ) {
+    effectiveType = 'TrustedPartner';
+  }
+
+  const style = ribbonStyles[effectiveType];
   if (!style) return null;
 
   return (
     <div className={`absolute top-3 -left-2 ${style.bg} ${style.text} text-xs font-bold px-3 py-1 shadow-md z-10`}
          style={{ clipPath: 'polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%)' }}>
-      {t(`listingType.${listingType}`)}
+      {t(`listingType.${effectiveType}`)}
     </div>
   );
 }

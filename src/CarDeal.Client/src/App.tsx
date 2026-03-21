@@ -15,6 +15,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import CarReviewPage from './pages/admin/CarReviewPage';
 import MakeOfferPage from './pages/admin/MakeOfferPage';
 import ConsignmentsPage from './pages/admin/ConsignmentsPage';
+import TenantsPage from './pages/admin/TenantsPage';
 import InventoryPage from './pages/InventoryPage';
 import PublicCarDetailPage from './pages/PublicCarDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -72,6 +73,10 @@ export default function App() {
               <Route
                 path="/admin/consignments"
                 element={<ProtectedRoute requireAdmin><ConsignmentsPage /></ProtectedRoute>}
+              />
+              <Route
+                path="/admin/tenants"
+                element={<ProtectedRoute requireAdmin><TenantsPage /></ProtectedRoute>}
               />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

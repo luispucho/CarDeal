@@ -82,6 +82,10 @@ export default function PublicCarDetailPage() {
             {car.year} {car.make} {car.model}
           </h1>
 
+          {car.tenantName && (
+            <p className="text-sm text-gray-500 mb-2">{t('tenants.soldBy')}: {car.tenantName}</p>
+          )}
+
           {car.askingPrice != null && (
             <p className="text-3xl font-bold text-green-600 mb-6">${car.askingPrice.toLocaleString()}</p>
           )}

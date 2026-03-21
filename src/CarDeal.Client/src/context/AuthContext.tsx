@@ -7,6 +7,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
@@ -63,7 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         token,
         isAuthenticated: !!token,
-        isAdmin: user?.role === 'Admin',
+        isAdmin: user?.role === 'Admin' || user?.role === 'SuperAdmin',
+        isSuperAdmin: user?.role === 'SuperAdmin',
         login,
         register,
         logout,

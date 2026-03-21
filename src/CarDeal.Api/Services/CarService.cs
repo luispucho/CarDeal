@@ -53,6 +53,7 @@ public class CarService : ICarService
     {
         var query = _db.Cars
             .Include(c => c.User)
+            .Include(c => c.Tenant)
             .Include(c => c.Images)
             .Include(c => c.Offers).ThenInclude(o => o.AdminUser)
             .AsQueryable();
@@ -68,6 +69,7 @@ public class CarService : ICarService
     {
         var cars = await _db.Cars
             .Include(c => c.User)
+            .Include(c => c.Tenant)
             .Include(c => c.Images)
             .Include(c => c.Offers).ThenInclude(o => o.AdminUser)
             .Where(c => c.UserId == userId)
@@ -80,6 +82,7 @@ public class CarService : ICarService
     {
         var query = _db.Cars
             .Include(c => c.User)
+            .Include(c => c.Tenant)
             .Include(c => c.Images)
             .Include(c => c.Offers).ThenInclude(o => o.AdminUser)
             .AsQueryable();
@@ -164,6 +167,7 @@ public class CarService : ICarService
         car.VIN, car.Color, car.Condition, car.Description, car.AskingPrice,
         car.IsFeatured,
         car.Status.ToString(), car.CreatedAt, car.UpdatedAt,
+        car.TenantId, car.Tenant?.Name,
         car.Images.Select(i => new CarImageResponse(i.Id, i.BlobUrl, i.FileName, i.IsPrimary, i.UploadedAt)).ToList(),
         car.Offers.Select(o => new OfferResponse(o.Id, o.CarId, o.AdminUserId, o.AdminUser.FullName, o.Amount, o.Notes, o.Status.ToString(), o.CreatedAt, o.UpdatedAt)).ToList()
     );

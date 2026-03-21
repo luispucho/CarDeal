@@ -1,31 +1,45 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using CarDeal.Api.DTOs;
+using CarDeal.Api.Models;
 using CarDeal.Api.Services;
 
 namespace CarDeal.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,SuperAdmin")]
 public class AdminController : ControllerBase
 {
     private readonly ICarService _carService;
     private readonly IOfferService _offerService;
+    private readonly UserManager<User> _userManager;
 
-    public AdminController(ICarService carService, IOfferService offerService)
+    public AdminController(ICarService carService, IOfferService offerService, UserManager<User> userManager)
     {
         _carService = carService;
         _offerService = offerService;
+        _userManager = userManager;
     }
 
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    private async Task<int?> GetCurrentUserTenantIdAsync()
+    {
+        if (User.IsInRole("SuperAdmin")) return null;
+        var user = await _userManager.FindByIdAsync(UserId);
+        return user?.TenantId;
+    }
 
     [HttpGet("dashboard")]
     public async Task<ActionResult<DashboardStatsResponse>> GetDashboard()
     {
         var allCars = await _carService.GetAllAsync();
+        var tenantId = await GetCurrentUserTenantIdAsync();
+        if (tenantId.HasValue)
+            allCars = allCars.Where(c => c.TenantId == tenantId.Value).ToList();
         var consignments = await _offerService.GetConsignmentsAsync();
 
         return Ok(new DashboardStatsResponse(
@@ -40,7 +54,13 @@ public class AdminController : ControllerBase
 
     [HttpGet("cars")]
     public async Task<ActionResult<List<CarResponse>>> GetAllCars([FromQuery] string? status)
-        => Ok(await _carService.GetAllAsync(status));
+    {
+        var allCars = await _carService.GetAllAsync(status);
+        var tenantId = await GetCurrentUserTenantIdAsync();
+        if (tenantId.HasValue)
+            allCars = allCars.Where(c => c.TenantId == tenantId.Value).ToList();
+        return Ok(allCars);
+    }
 
     [HttpGet("cars/{id}")]
     public async Task<ActionResult<CarResponse>> GetCar(int id)

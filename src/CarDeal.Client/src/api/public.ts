@@ -11,6 +11,8 @@ export interface PublicCar {
   description?: string;
   askingPrice?: number;
   listingType: string;
+  tenantName: string | null;
+  tenantId: number | null;
   images: { id: number; blobUrl: string; fileName: string; isPrimary: boolean; uploadedAt: string }[];
 }
 
