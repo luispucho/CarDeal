@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { adminApi } from '../../api/admin';
@@ -33,8 +33,8 @@ export default function MakeOfferPage() {
     enabled: !!id,
   });
 
-  const offerForm = useForm<OfferForm>({ resolver: zodResolver(offerSchema) });
-  const consignForm = useForm<ConsignForm>({ resolver: zodResolver(consignSchema) });
+  const offerForm = useForm<OfferForm>({ resolver: zodResolver(offerSchema) as Resolver<OfferForm> });
+  const consignForm = useForm<ConsignForm>({ resolver: zodResolver(consignSchema) as Resolver<ConsignForm> });
 
   const offerMutation = useMutation({
     mutationFn: (data: OfferForm) => adminApi.makeOffer(Number(id), data),

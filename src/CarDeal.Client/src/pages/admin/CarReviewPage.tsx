@@ -1,13 +1,11 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams, Link } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
 import { messagesApi } from '../../api/messages';
 import { useState } from 'react';
 
 export default function CarReviewPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [messageBody, setMessageBody] = useState('');
 
   const { data: car, isLoading } = useQuery({
