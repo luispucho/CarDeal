@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CarDeal.Api.DTOs;
 
-public record TenantResponse(int Id, string Name, string Slug, string? LogoUrl, string? ContactEmail, DateTime CreatedAt, int UserCount, int CarCount);
+public record TenantResponse(int Id, string Name, string Slug, string? LogoUrl, string? ContactEmail, string Tier, DateTime CreatedAt, int UserCount, int CarCount);
 public record CreateTenantRequest([Required] string Name, [Required] string Slug, string? ContactEmail);
 public record UpdateTenantRequest(string? Name, string? Slug, string? ContactEmail);
 public record AssignUserRequest([Required] string UserId);

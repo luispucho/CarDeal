@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { crmApi } from '../../api/crm';
+import TierGate from '../../components/common/TierGate';
 
 const PLATFORM_ICONS: Record<string, string> = {
   facebook: '📘',
@@ -31,6 +32,12 @@ export default function CrmConnectionsPage() {
   const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const isTenantAdmin = user?.role === 'TenantAdmin' || user?.role === 'SuperAdmin';
+
+  const { data: branding } = useQuery({
+    queryKey: ['branding'],
+    queryFn: crmApi.getBranding,
+    enabled: isTenantAdmin,
+  });
 
   const { data: platforms, isLoading: loadingPlatforms } = useQuery({
     queryKey: ['platforms'],
@@ -138,6 +145,7 @@ export default function CrmConnectionsPage() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
+    <TierGate requiredTier="Pro" currentTier={branding?.tier}>
     <div>
       <h1 className="text-2xl font-bold mb-6">{t('crm.platformConnections')}</h1>
 
@@ -271,5 +279,6 @@ export default function CrmConnectionsPage() {
         })}
       </div>
     </div>
+    </TierGate>
   );
 }

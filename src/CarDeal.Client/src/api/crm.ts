@@ -191,4 +191,24 @@ export const crmApi = {
 
   unpublishCar: (pubId: number) =>
     apiClient.post(`/crm/publications/${pubId}/unpublish`).then((r) => r.data),
+
+  // Branding
+  getBranding: () =>
+    apiClient.get<any>('/crm/branding').then((r) => r.data),
+
+  updateBranding: (data: any) =>
+    apiClient.put('/crm/branding', data).then((r) => r.data),
+
+  uploadLogo: (file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return apiClient
+      .post('/crm/branding/logo', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+  },
+
+  deleteLogo: () =>
+    apiClient.delete('/crm/branding/logo').then((r) => r.data),
 };

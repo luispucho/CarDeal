@@ -24,6 +24,7 @@ import CrmInventoryPage from './pages/crm/CrmInventoryPage';
 import CrmCarDetailPage from './pages/crm/CrmCarDetailPage';
 import CrmEmployeesPage from './pages/crm/CrmEmployeesPage';
 import CrmConnectionsPage from './pages/crm/CrmConnectionsPage';
+import CrmBrandingPage from './pages/crm/CrmBrandingPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,6 +103,10 @@ export default function App() {
               <Route
                 path="/crm/connections"
                 element={<ProtectedRoute><CrmConnectionsPage /></ProtectedRoute>}
+              />
+              <Route
+                path="/crm/branding"
+                element={<ProtectedRoute><CrmBrandingPage /></ProtectedRoute>}
               />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

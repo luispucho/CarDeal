@@ -77,6 +77,9 @@ export default function Layout() {
                   <Link to="/crm/connections" className="text-gray-700 hover:text-blue-600 transition font-medium">
                     🔗 {t('crm.connections')}
                   </Link>
+                  <Link to="/crm/branding" className="text-gray-700 hover:text-blue-600 transition font-medium">
+                    🎨 {t('crm.branding')}
+                  </Link>
                 </>
               )}
             </div>

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { crmApi } from '../../api/crm';
+import TierGate from '../../components/common/TierGate';
 
 function formatCurrency(value: number) {
   return `$${value.toLocaleString()}`;
@@ -12,6 +13,11 @@ function TenantDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['crmTenantStats'],
     queryFn: crmApi.getTenantStats,
+  });
+
+  const { data: branding } = useQuery({
+    queryKey: ['branding'],
+    queryFn: crmApi.getBranding,
   });
 
   if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
@@ -55,6 +61,7 @@ function TenantDashboard() {
         ))}
       </div>
 
+      <TierGate requiredTier="Pro" currentTier={branding?.tier}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Profitable Cars */}
         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -129,6 +136,7 @@ function TenantDashboard() {
           </table>
         </div>
       </div>
+      </TierGate>
     </div>
   );
 }

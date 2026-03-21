@@ -313,6 +313,13 @@
     "userRemoved": "User removed from tenant",
     "soldBy": "Sold by"
   },
+  "tierGate": {
+    "title": "Whoa! This car needs a new tire",
+    "message": "This feature isn't available on your current plan. Upgrade to unlock it!",
+    "currentTier": "Your Plan",
+    "requiredTier": "Required Plan",
+    "contact": "Contact the platform administrator to upgrade your plan"
+  },
   "crm": {
     "title": "CRM",
     "dashboard": "Dashboard",
@@ -410,6 +417,36 @@
     "updateSuccess": "Listing updated!",
     "noConnections": "No platform connections configured. Ask your admin to set up connections.",
     "enable": "Enable",
-    "disable": "Disable"
+    "disable": "Disable",
+    "branding": "Branding",
+    "brandColors": "Brand Colors",
+    "primaryColor": "Primary Color",
+    "secondaryColor": "Secondary Color",
+    "accentColor": "Accent Color",
+    "textColor": "Text Color",
+    "backgroundColor": "Background Color",
+    "dealerName": "Dealer Name",
+    "tagline": "Tagline",
+    "logo": "Logo",
+    "uploadLogo": "Upload Logo",
+    "removeLogo": "Remove Logo",
+    "landingLayout": "Landing Page Layout",
+    "dragToReorder": "Drag sections to reorder your landing page",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down",
+    "customDomain": "Custom Domain",
+    "brandingSaved": "Branding saved!",
+    "logoUploaded": "Logo uploaded!",
+    "logoRemoved": "Logo removed",
+    "layoutSaved": "Layout saved!",
+    "hero": "Hero Banner",
+    "featuredSection": "Featured Cars",
+    "inventorySection": "Inventory Preview",
+    "aboutSection": "About Us",
+    "contactSection": "Contact",
+    "preview": "Preview",
+    "tierBasic": "Basic",
+    "tierPro": "Pro",
+    "tierEnterprise": "Enterprise"
   }
 }
