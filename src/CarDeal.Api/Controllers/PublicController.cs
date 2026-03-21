@@ -23,6 +23,10 @@ public class PublicController : ControllerBase
         var query = _db.Cars
             .Include(c => c.Images)
             .Include(c => c.Tenant)
+            .Where(c => c.Status != CarStatus.Sold &&
+                        c.Status != CarStatus.Pending &&
+                        c.Status != CarStatus.Rejected &&
+                        c.Status != CarStatus.Withdrawn)
             .Where(c => c.ListingType == Models.ListingType.Inventory ||
                         c.ListingType == Models.ListingType.CertifiedInventory ||
                         c.ListingType == Models.ListingType.TrustedPartner ||
@@ -57,11 +61,15 @@ public class PublicController : ControllerBase
         var cars = await _db.Cars
             .Include(c => c.Images)
             .Include(c => c.Tenant)
-            .Where(c => c.IsFeatured && (
-                c.ListingType == Models.ListingType.Inventory ||
+            .Where(c => c.IsFeatured &&
+                c.Status != CarStatus.Sold &&
+                c.Status != CarStatus.Pending &&
+                c.Status != CarStatus.Rejected &&
+                c.Status != CarStatus.Withdrawn)
+            .Where(c => c.ListingType == Models.ListingType.Inventory ||
                 c.ListingType == Models.ListingType.CertifiedInventory ||
                 c.ListingType == Models.ListingType.TrustedPartner ||
-                (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null)))
+                (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null))
             .OrderByDescending(c => c.UpdatedAt)
             .Take(6)
             .ToListAsync();
@@ -75,10 +83,12 @@ public class PublicController : ControllerBase
         var car = await _db.Cars
             .Include(c => c.Images)
             .Include(c => c.Tenant)
-            .FirstOrDefaultAsync(c => c.Id == id && (
-                c.ListingType == Models.ListingType.Inventory ||
-                c.ListingType == Models.ListingType.CertifiedInventory ||
-                c.ListingType == Models.ListingType.TrustedPartner ||
+            .FirstOrDefaultAsync(c => c.Id == id &&
+                c.Status != CarStatus.Sold &&
+                c.Status != CarStatus.Pending &&
+                c.Status != CarStatus.Rejected &&
+                c.Status != CarStatus.Withdrawn &&
+                (c.ListingType == Models.ListingType.Inventory ||
                 (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null)));
 
         return car == null ? NotFound() : Ok(MapToPublic(car));

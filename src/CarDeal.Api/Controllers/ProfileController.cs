@@ -2,6 +2,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using CarDeal.Api.Data;
 using CarDeal.Api.DTOs;
 using CarDeal.Api.Models;
 using CarDeal.Api.Services;
@@ -15,11 +17,13 @@ public class ProfileController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
     private readonly IBlobStorageService _blobService;
+    private readonly AppDbContext _db;
 
-    public ProfileController(UserManager<User> userManager, IBlobStorageService blobService)
+    public ProfileController(UserManager<User> userManager, IBlobStorageService blobService, AppDbContext db)
     {
         _userManager = userManager;
         _blobService = blobService;
+        _db = db;
     }
 
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -92,5 +96,37 @@ public class ProfileController : ControllerBase
         return Ok(new ProfileResponse(
             user.Id, user.Email!, user.FullName, user.Phone,
             user.ProfilePictureUrl, user.CreatedAt));
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteAccount()
+    {
+        var user = await _userManager.FindByIdAsync(UserId);
+        if (user == null) return NotFound();
+
+        // Mark all active (non-sold, non-rejected) cars as Withdrawn
+        var activeCars = await _db.Cars
+            .Where(c => c.UserId == UserId &&
+                        c.Status != CarStatus.Sold &&
+                        c.Status != CarStatus.Rejected &&
+                        c.Status != CarStatus.Withdrawn)
+            .ToListAsync();
+
+        foreach (var car in activeCars)
+        {
+            car.Status = CarStatus.Withdrawn;
+            car.IsFeatured = false;
+            car.UpdatedAt = DateTime.UtcNow;
+        }
+        await _db.SaveChangesAsync();
+
+        // Delete profile picture
+        if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+            await _blobService.DeleteAsync(user.ProfilePictureUrl);
+
+        // Delete user account
+        await _userManager.DeleteAsync(user);
+
+        return NoContent();
     }
 }

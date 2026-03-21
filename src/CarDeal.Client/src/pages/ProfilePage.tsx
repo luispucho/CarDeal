@@ -15,10 +15,11 @@ type FormData = z.infer<typeof schema>;
 
 export default function ProfilePage() {
   const { t } = useTranslation();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -82,6 +83,23 @@ export default function ProfilePage() {
       uploadMutation.mutate(file);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(t('profile.confirmDelete'))) return;
+    const answer = window.prompt(t('profile.confirmDeleteFinal'));
+    if (answer !== 'DELETE') return;
+
+    setDeleting(true);
+    try {
+      await profileApi.deleteAccount();
+      logout();
+    } catch {
+      setFeedback({ type: 'error', message: t('profile.error') });
+      setTimeout(() => setFeedback(null), 3000);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -199,6 +217,19 @@ export default function ProfilePage() {
             {updateMutation.isPending ? t('profile.saving') : t('profile.save')}
           </button>
         </form>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="bg-white rounded-xl shadow-sm p-6 mt-6 border border-red-200">
+        <h2 className="text-lg font-semibold text-red-600 mb-2">{t('profile.dangerZone')}</h2>
+        <p className="text-sm text-gray-600 mb-4">{t('profile.deleteWarning')}</p>
+        <button
+          onClick={handleDeleteAccount}
+          disabled={deleting}
+          className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition text-sm font-semibold"
+        >
+          {deleting ? t('common.loading') : t('profile.deleteAccount')}
+        </button>
       </div>
     </div>
   );

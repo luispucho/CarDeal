@@ -145,7 +145,8 @@
     "Offered": "Offered",
     "Consigned": "Consigned",
     "Sold": "Sold",
-    "Rejected": "Rejected"
+    "Rejected": "Rejected",
+    "Withdrawn": "Withdrawn"
   },
   "offerStatus": {
     "Pending": "Pending",
@@ -254,7 +255,12 @@
     "error": "Failed to update profile",
     "pictureUploaded": "Picture uploaded!",
     "pictureRemoved": "Picture removed",
-    "pictureError": "Failed to update picture"
+    "pictureError": "Failed to update picture",
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete My Account",
+    "deleteWarning": "Permanently delete your account and all your data. Any active car listings will be marked as withdrawn and removed from the inventory.",
+    "confirmDelete": "Are you sure you want to delete your account? This cannot be undone.",
+    "confirmDeleteFinal": "This action is PERMANENT. Type DELETE to confirm:"
   },
   "socialLogin": {
     "orContinueWith": "or continue with",
