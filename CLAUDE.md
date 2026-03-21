@@ -38,6 +38,7 @@ npm run dev         # http://localhost:5173 — proxies API calls to localhost:5
 - .NET 10.0 SDK (project retargeted from net9.0)
 - Node.js 22+ with npm
 - SQL Server LocalDB
+- [GitHub CLI (`gh`)](https://cli.github.com/) — for repository management and CI/CD operations
 - Azurite (Azure Storage Emulator) — **optional** for local dev (see Image Storage below)
 
 ### Image Storage
