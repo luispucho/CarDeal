@@ -74,6 +74,7 @@ export interface Car {
   description?: string;
   askingPrice?: number;
   status: string;
+  isFeatured: boolean;
   createdAt: string;
   updatedAt: string;
   images: CarImage[];

@@ -39,6 +39,9 @@ export default function Layout() {
               <Link to="/" className="text-xl font-bold text-blue-600">
                 {t('nav.brand')}
               </Link>
+              <Link to="/inventory" className="text-gray-700 hover:text-blue-600 transition">
+                {t('nav.inventory')}
+              </Link>
               {isAuthenticated && (
                 <>
                   <Link to="/my-cars" className="text-gray-700 hover:text-blue-600 transition">

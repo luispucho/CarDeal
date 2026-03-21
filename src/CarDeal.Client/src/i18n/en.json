@@ -28,7 +28,8 @@
   "nav": {
     "brand": "🚗 CarDeal",
     "adminBadge": "Admin",
-    "adminLink": "⚙ Admin"
+    "adminLink": "⚙ Admin",
+    "inventory": "Inventory"
   },
   "home": {
     "heroTitle": "Sell Your Car with",
@@ -66,7 +67,10 @@
     "ctaTitle": "Ready to Sell Your Car?",
     "ctaSubtitle": "Join thousands of satisfied sellers. Submit your car today and receive a fair offer within 24 hours.",
     "ctaPrimary": "Submit Your Car Now",
-    "ctaSecondary": "Learn More"
+    "ctaSecondary": "Learn More",
+    "featuredTitle": "Featured Vehicles",
+    "featuredSubtitle": "Hand-picked cars ready for you",
+    "viewInventory": "View All Inventory"
   },
   "auth": {
     "signIn": "Sign In",
@@ -188,7 +192,8 @@
     "sendToOwner": "Send Message to Owner",
     "typeYourMessage": "Type your message...",
     "sendMessage": "Send Message",
-    "messageSent": "Message sent!"
+    "messageSent": "Message sent!",
+    "featureOnHomepage": "⭐ Feature on Homepage"
   },
   "adminOffer": {
     "backToReview": "← Back to Review",
@@ -254,5 +259,29 @@
     "orContinueWith": "or continue with",
     "google": "Continue with Google",
     "github": "Continue with GitHub"
+  },
+  "inventory": {
+    "title": "Car Inventory",
+    "subtitle": "Browse our collection of quality vehicles",
+    "searchMake": "Search by make...",
+    "allYears": "All Years",
+    "allPrices": "All Prices",
+    "sortBy": "Sort by",
+    "newest": "Newest First",
+    "priceAsc": "Price: Low to High",
+    "priceDesc": "Price: High to Low",
+    "yearDesc": "Year: Newest",
+    "mileageAsc": "Mileage: Lowest",
+    "noCarsFound": "No cars found matching your criteria",
+    "interested": "Interested in this car?",
+    "registerCta": "Register to get started",
+    "featured": "⭐ Featured",
+    "allTypes": "All Types"
+  },
+  "listingType": {
+    "Consigned": "Consigned",
+    "Inventory": "Inventory",
+    "CertifiedInventory": "Certified",
+    "TrustedPartner": "Trusted Partner"
   }
 }

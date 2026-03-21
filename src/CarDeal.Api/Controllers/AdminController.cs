@@ -74,4 +74,13 @@ public class AdminController : ControllerBase
     [HttpGet("consignments")]
     public async Task<ActionResult<List<ConsignmentResponse>>> GetConsignments([FromQuery] string? status)
         => Ok(await _offerService.GetConsignmentsAsync(status));
+
+    [HttpPut("cars/{carId}/featured")]
+    public async Task<IActionResult> ToggleFeatured(int carId, [FromBody] ToggleFeaturedRequest request)
+    {
+        var car = await _carService.GetByIdAsync(carId);
+        if (car == null) return NotFound();
+        await _carService.SetFeaturedAsync(carId, request.IsFeatured);
+        return Ok(new { carId, request.IsFeatured });
+    }
 }
