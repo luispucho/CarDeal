@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { adminApi } from '../../api/admin';
 
 export default function ConsignmentsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('');
 
@@ -25,42 +27,42 @@ export default function ConsignmentsPage() {
     Cancelled: 'bg-red-100 text-red-800',
   };
 
-  if (isLoading) return <div className="text-center py-12 text-gray-500">Loading...</div>;
+  if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <Link to="/admin" className="text-blue-600 hover:underline text-sm">← Back to Dashboard</Link>
-          <h1 className="text-2xl font-bold mt-2">Consignments</h1>
+          <Link to="/admin" className="text-blue-600 hover:underline text-sm">{t('consignments.backToDashboard')}</Link>
+          <h1 className="text-2xl font-bold mt-2">{t('consignments.title')}</h1>
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="border rounded-lg px-4 py-2 text-sm"
         >
-          <option value="">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Sold">Sold</option>
-          <option value="Expired">Expired</option>
-          <option value="Cancelled">Cancelled</option>
+          <option value="">{t('consignments.allStatuses')}</option>
+          <option value="Active">{t('consignments.active')}</option>
+          <option value="Sold">{t('consignments.sold')}</option>
+          <option value="Expired">{t('consignments.expired')}</option>
+          <option value="Cancelled">{t('consignments.cancelled')}</option>
         </select>
       </div>
 
       {!consignments?.length ? (
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm text-gray-500">No consignments found</div>
+        <div className="text-center py-12 bg-white rounded-xl shadow-sm text-gray-500">{t('consignments.noConsignments')}</div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-gray-500 border-b bg-gray-50">
-                <th className="px-6 py-3 font-medium">ID</th>
-                <th className="px-6 py-3 font-medium">Car ID</th>
-                <th className="px-6 py-3 font-medium">Agreed Price</th>
-                <th className="px-6 py-3 font-medium">Commission</th>
-                <th className="px-6 py-3 font-medium">Period</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3 font-medium">Actions</th>
+                <th className="px-6 py-3 font-medium">{t('consignments.id')}</th>
+                <th className="px-6 py-3 font-medium">{t('consignments.carId')}</th>
+                <th className="px-6 py-3 font-medium">{t('consignments.agreedPrice')}</th>
+                <th className="px-6 py-3 font-medium">{t('consignments.commission')}</th>
+                <th className="px-6 py-3 font-medium">{t('consignments.period')}</th>
+                <th className="px-6 py-3 font-medium">{t('common.status')}</th>
+                <th className="px-6 py-3 font-medium">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -73,7 +75,7 @@ export default function ConsignmentsPage() {
                   <td className="px-6 py-4 font-medium">${c.agreedPrice.toLocaleString()}</td>
                   <td className="px-6 py-4">{c.commissionPercent}%</td>
                   <td className="px-6 py-4 text-gray-500">
-                    {new Date(c.startDate).toLocaleDateString()} — {c.endDate ? new Date(c.endDate).toLocaleDateString() : 'Open'}
+                    {new Date(c.startDate).toLocaleDateString()} — {c.endDate ? new Date(c.endDate).toLocaleDateString() : t('common.open')}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`text-xs px-2 py-1 rounded-full ${statusColors[c.status] || 'bg-gray-100'}`}>
@@ -87,13 +89,13 @@ export default function ConsignmentsPage() {
                           onClick={() => updateMutation.mutate({ id: c.id, status: 'Sold' })}
                           className="text-green-600 hover:underline text-xs"
                         >
-                          Mark Sold
+                          {t('consignments.markSold')}
                         </button>
                         <button
                           onClick={() => updateMutation.mutate({ id: c.id, status: 'Cancelled' })}
                           className="text-red-600 hover:underline text-xs"
                         >
-                          Cancel
+                          {t('consignments.cancel')}
                         </button>
                       </div>
                     )}

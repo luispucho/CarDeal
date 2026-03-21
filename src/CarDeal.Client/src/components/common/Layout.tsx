@@ -1,11 +1,22 @@
+import { useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { messagesApi } from '../../api/messages';
+import { settingsApi } from '../../api/settings';
 
 export default function Layout() {
+  const { t, i18n } = useTranslation();
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    settingsApi.getLanguage().then(({ language }) => {
+      i18n.changeLanguage(language);
+      localStorage.setItem('siteLanguage', language);
+    }).catch(() => {});
+  }, [i18n]);
 
   const { data: unreadCount } = useQuery({
     queryKey: ['unreadCount'],
@@ -26,18 +37,18 @@ export default function Layout() {
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
               <Link to="/" className="text-xl font-bold text-blue-600">
-                🚗 CarDeal
+                {t('nav.brand')}
               </Link>
               {isAuthenticated && (
                 <>
                   <Link to="/my-cars" className="text-gray-700 hover:text-blue-600 transition">
-                    My Cars
+                    {t('common.myCars')}
                   </Link>
                   <Link to="/submit-car" className="text-gray-700 hover:text-blue-600 transition">
-                    Submit a Car
+                    {t('common.submitACar')}
                   </Link>
                   <Link to="/inbox" className="text-gray-700 hover:text-blue-600 transition relative">
-                    Messages
+                    {t('common.messages')}
                     {(unreadCount ?? 0) > 0 && (
                       <span className="absolute -top-2 -right-4 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                         {unreadCount}
@@ -46,7 +57,7 @@ export default function Layout() {
                   </Link>
                   {isAdmin && (
                     <Link to="/admin" className="text-gray-700 hover:text-blue-600 transition font-medium">
-                      ⚙ Admin
+                      {t('nav.adminLink')}
                     </Link>
                   )}
                 </>
@@ -56,25 +67,25 @@ export default function Layout() {
               {isAuthenticated ? (
                 <>
                   <span className="text-sm text-gray-600">
-                    {user?.fullName} {isAdmin && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Admin</span>}
+                    {user?.fullName} {isAdmin && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{t('nav.adminBadge')}</span>}
                   </span>
                   <button
                     onClick={handleLogout}
                     className="text-sm text-red-600 hover:text-red-800 transition"
                   >
-                    Logout
+                    {t('common.logout')}
                   </button>
                 </>
               ) : (
                 <>
                   <Link to="/login" className="text-gray-700 hover:text-blue-600 transition">
-                    Login
+                    {t('common.login')}
                   </Link>
                   <Link
                     to="/register"
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
                   >
-                    Register
+                    {t('common.register')}
                   </Link>
                 </>
               )}
