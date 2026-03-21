@@ -1,0 +1,70 @@
+name: Build & Deploy Client
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'src/CarDeal.Client/**'
+      - '.github/workflows/client.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'src/CarDeal.Client/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/CarDeal.Client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: src/CarDeal.Client
+
+      - name: Type check
+        run: npx tsc --noEmit
+        working-directory: src/CarDeal.Client
+
+      - name: Build
+        run: npm run build
+        working-directory: src/CarDeal.Client
+        env:
+          VITE_API_URL: ${{ vars.API_BASE_URL }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-package
+          path: src/CarDeal.Client/dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: client-package
+          path: src/CarDeal.Client/dist
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: src/CarDeal.Client/dist
+          skip_app_build: true
+          skip_api_build: true
