@@ -38,3 +38,40 @@ public class BlobStorageService : IBlobStorageService
         await blob.DeleteIfExistsAsync();
     }
 }
+
+/// <summary>
+/// Local file system storage for development when Azurite is not available.
+/// Stores images under wwwroot/uploads/car-images.
+/// </summary>
+public class LocalBlobStorageService : IBlobStorageService
+{
+    private readonly string _basePath;
+    private readonly string _baseUrl;
+
+    public LocalBlobStorageService(IWebHostEnvironment env, IConfiguration configuration)
+    {
+        _basePath = Path.Combine(env.ContentRootPath, "wwwroot", "uploads", "car-images");
+        Directory.CreateDirectory(_basePath);
+        _baseUrl = "/uploads/car-images";
+    }
+
+    public async Task<string> UploadAsync(Stream stream, string fileName, string contentType)
+    {
+        var folder = Guid.NewGuid().ToString();
+        var dirPath = Path.Combine(_basePath, folder);
+        Directory.CreateDirectory(dirPath);
+        var filePath = Path.Combine(dirPath, fileName);
+        using var fs = File.Create(filePath);
+        await stream.CopyToAsync(fs);
+        return $"{_baseUrl}/{folder}/{fileName}";
+    }
+
+    public Task DeleteAsync(string blobUrl)
+    {
+        var relativePath = blobUrl.Replace(_baseUrl + "/", "");
+        var filePath = Path.Combine(_basePath, relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+        return Task.CompletedTask;
+    }
+}
