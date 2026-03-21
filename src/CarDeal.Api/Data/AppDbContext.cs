@@ -13,6 +13,7 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<Offer> Offers => Set<Offer>();
     public DbSet<Consignment> Consignments => Set<Consignment>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -52,6 +53,12 @@ public class AppDbContext : IdentityDbContext<User>
             e.HasOne(m => m.Car).WithMany().HasForeignKey(m => m.CarId).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(m => m.ReceiverId);
             e.HasIndex(m => m.SenderId);
+        });
+
+        builder.Entity<SiteSetting>(e =>
+        {
+            e.HasKey(s => s.Key);
+            e.HasData(new SiteSetting { Key = "Language", Value = "en" });
         });
     }
 }

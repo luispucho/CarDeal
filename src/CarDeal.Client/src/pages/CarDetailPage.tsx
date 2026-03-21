@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { carsApi } from '../api/cars';
 import { useAuth } from '../context/AuthContext';
 
 export default function CarDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -41,8 +43,8 @@ export default function CarDetailPage() {
     }
   };
 
-  if (isLoading) return <div className="text-center py-12 text-gray-500">Loading...</div>;
-  if (!car) return <div className="text-center py-12 text-red-500">Car not found</div>;
+  if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
+  if (!car) return <div className="text-center py-12 text-red-500">{t('cars.carNotFound')}</div>;
 
   const statusColors: Record<string, string> = {
     Pending: 'bg-yellow-100 text-yellow-800',
@@ -59,19 +61,19 @@ export default function CarDetailPage() {
         <div>
           <h1 className="text-3xl font-bold">{car.year} {car.make} {car.model}</h1>
           <span className={`inline-block mt-2 text-sm px-3 py-1 rounded-full ${statusColors[car.status] || 'bg-gray-100'}`}>
-            {car.status}
+            {t(`carStatus.${car.status}`)}
           </span>
         </div>
         {car.userId === user?.id && car.status === 'Pending' && (
           <button onClick={() => deleteMutation.mutate()} className="text-red-600 hover:text-red-800 text-sm">
-            Delete
+            {t('common.delete')}
           </button>
         )}
       </div>
 
       {/* Images */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Photos</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('cars.photos')}</h2>
         {car.images.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {car.images.map((img) => (
@@ -85,33 +87,33 @@ export default function CarDetailPage() {
                     ✕
                   </button>
                 )}
-                {img.isPrimary && <span className="absolute bottom-1 left-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded">Primary</span>}
+                {img.isPrimary && <span className="absolute bottom-1 left-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded">{t('common.primary')}</span>}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">No photos uploaded yet</p>
+          <p className="text-gray-500">{t('cars.noPhotosYet')}</p>
         )}
         {car.userId === user?.id && car.images.length < 10 && (
           <div className="mt-4">
             <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="text-sm" disabled={uploading} />
-            {uploading && <p className="text-sm text-blue-600 mt-1">Uploading...</p>}
+            {uploading && <p className="text-sm text-blue-600 mt-1">{t('cars.uploading')}</p>}
           </div>
         )}
       </div>
 
       {/* Details */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Details</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('cars.details')}</h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-gray-500">Make:</span> <span className="font-medium">{car.make}</span></div>
-          <div><span className="text-gray-500">Model:</span> <span className="font-medium">{car.model}</span></div>
-          <div><span className="text-gray-500">Year:</span> <span className="font-medium">{car.year}</span></div>
-          <div><span className="text-gray-500">Mileage:</span> <span className="font-medium">{car.mileage.toLocaleString()} miles</span></div>
-          {car.vin && <div><span className="text-gray-500">VIN:</span> <span className="font-medium">{car.vin}</span></div>}
-          {car.color && <div><span className="text-gray-500">Color:</span> <span className="font-medium">{car.color}</span></div>}
-          {car.condition && <div><span className="text-gray-500">Condition:</span> <span className="font-medium">{car.condition}</span></div>}
-          {car.askingPrice && <div><span className="text-gray-500">Asking Price:</span> <span className="font-medium text-green-600">${car.askingPrice.toLocaleString()}</span></div>}
+          <div><span className="text-gray-500">{t('cars.make')}:</span> <span className="font-medium">{car.make}</span></div>
+          <div><span className="text-gray-500">{t('cars.model')}:</span> <span className="font-medium">{car.model}</span></div>
+          <div><span className="text-gray-500">{t('cars.year')}:</span> <span className="font-medium">{car.year}</span></div>
+          <div><span className="text-gray-500">{t('cars.mileage')}:</span> <span className="font-medium">{car.mileage.toLocaleString()} {t('common.miles')}</span></div>
+          {car.vin && <div><span className="text-gray-500">{t('cars.vin')}:</span> <span className="font-medium">{car.vin}</span></div>}
+          {car.color && <div><span className="text-gray-500">{t('cars.color')}:</span> <span className="font-medium">{car.color}</span></div>}
+          {car.condition && <div><span className="text-gray-500">{t('cars.condition')}:</span> <span className="font-medium">{car.condition}</span></div>}
+          {car.askingPrice && <div><span className="text-gray-500">{t('cars.askingPrice')}:</span> <span className="font-medium text-green-600">${car.askingPrice.toLocaleString()}</span></div>}
         </div>
         {car.description && <p className="mt-4 text-gray-700">{car.description}</p>}
       </div>
@@ -119,21 +121,21 @@ export default function CarDetailPage() {
       {/* Offers */}
       {car.offers && car.offers.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">Offers</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('cars.offers')}</h2>
           <div className="space-y-3">
             {car.offers.map((offer) => (
               <div key={offer.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-semibold text-lg text-green-600">${offer.amount.toLocaleString()}</p>
                   {offer.notes && <p className="text-sm text-gray-600 mt-1">{offer.notes}</p>}
-                  <p className="text-xs text-gray-400 mt-1">From {offer.adminName} · {new Date(offer.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('cars.from')} {offer.adminName} · {new Date(offer.createdAt).toLocaleDateString()}</p>
                 </div>
                 <span className={`text-sm px-3 py-1 rounded-full ${
                   offer.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
                   offer.status === 'Accepted' ? 'bg-green-100 text-green-800' :
                   'bg-red-100 text-red-800'
                 }`}>
-                  {offer.status}
+                  {t(`offerStatus.${offer.status}`)}
                 </span>
               </div>
             ))}

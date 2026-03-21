@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { carsApi } from '../api/cars';
 
@@ -12,26 +13,27 @@ const statusColors: Record<string, string> = {
 };
 
 export default function MyCarsPage() {
+  const { t } = useTranslation();
   const { data: cars, isLoading } = useQuery({
     queryKey: ['myCars'],
     queryFn: carsApi.getMyCars,
   });
 
-  if (isLoading) return <div className="text-center py-12 text-gray-500">Loading...</div>;
+  if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Cars</h1>
+        <h1 className="text-2xl font-bold">{t('cars.myCars')}</h1>
         <Link to="/submit-car" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-          + Submit New Car
+          {t('cars.submitNewCar')}
         </Link>
       </div>
 
       {!cars?.length ? (
         <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-          <p className="text-gray-500 mb-4">You haven't submitted any cars yet.</p>
-          <Link to="/submit-car" className="text-blue-600 hover:underline">Submit your first car →</Link>
+          <p className="text-gray-500 mb-4">{t('cars.noCarsYet')}</p>
+          <Link to="/submit-car" className="text-blue-600 hover:underline">{t('cars.submitFirst')}</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -48,14 +50,14 @@ export default function MyCarsPage() {
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-lg">{car.year} {car.make} {car.model}</h3>
                   <span className={`text-xs px-2 py-1 rounded-full ${statusColors[car.status] || 'bg-gray-100'}`}>
-                    {car.status}
+                    {t(`carStatus.${car.status}`)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">{car.mileage.toLocaleString()} miles</p>
+                <p className="text-sm text-gray-600">{car.mileage.toLocaleString()} {t('common.miles')}</p>
                 {car.askingPrice && <p className="text-lg font-bold text-green-600 mt-2">${car.askingPrice.toLocaleString()}</p>}
                 {(car.offers?.length ?? 0) > 0 && (
                   <p className="text-sm text-purple-600 mt-1">
-                    {car.offers!.length} offer{car.offers!.length > 1 ? 's' : ''} received
+                    {t('cars.offersReceived', { count: car.offers!.length })}
                   </p>
                 )}
               </div>

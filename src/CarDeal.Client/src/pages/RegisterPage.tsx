@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,6 +19,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -37,39 +39,39 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-md mx-auto mt-12">
-      <h1 className="text-3xl font-bold text-center mb-8">Create Account</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">{t('auth.createAccount')}</h1>
       {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4">{error}</div>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.fullName')}</label>
           <input {...register('fullName')} className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
           {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.email')}</label>
           <input {...register('email')} type="email" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.phoneOptional')}</label>
           <input {...register('phone')} type="tel" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.password')}</label>
           <input {...register('password')} type="password" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
           {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.confirmPassword')}</label>
           <input {...register('confirmPassword')} type="password" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
           {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>}
         </div>
         <button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
-          {isSubmitting ? 'Creating account...' : 'Create Account'}
+          {isSubmitting ? t('auth.creatingAccount') : t('auth.createAccount')}
         </button>
       </form>
       <p className="text-center mt-4 text-sm text-gray-600">
-        Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Sign in</Link>
+        {t('auth.hasAccount')} <Link to="/login" className="text-blue-600 hover:underline">{t('auth.signIn')}</Link>
       </p>
     </div>
   );

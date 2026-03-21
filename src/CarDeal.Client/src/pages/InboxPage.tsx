@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { messagesApi } from '../api/messages';
 import { useAuth } from '../context/AuthContext';
 import type { SendMessageRequest } from '../types';
 
 export default function InboxPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedThread, setSelectedThread] = useState<{ otherUserId: string; carId?: number } | null>(null);
@@ -41,16 +43,16 @@ export default function InboxPage() {
     });
   };
 
-  if (isLoading) return <div className="text-center py-12 text-gray-500">Loading...</div>;
+  if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Messages</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('inbox.messages')}</h1>
       <div className="flex bg-white rounded-xl shadow-sm overflow-hidden" style={{ height: '600px' }}>
         {/* Thread List */}
         <div className="w-1/3 border-r overflow-y-auto">
           {!threads?.length ? (
-            <p className="text-gray-500 text-center py-8 text-sm">No messages yet</p>
+            <p className="text-gray-500 text-center py-8 text-sm">{t('inbox.noMessages')}</p>
           ) : (
             threads.map((thread) => (
               <button
@@ -99,17 +101,17 @@ export default function InboxPage() {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Type a message..."
+                  placeholder={t('inbox.typeMessage')}
                   className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
                 <button onClick={handleSend} disabled={sendMutation.isPending} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
-                  Send
+                  {t('common.send')}
                 </button>
               </div>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400">
-              Select a conversation
+              {t('inbox.selectConversation')}
             </div>
           )}
         </div>
