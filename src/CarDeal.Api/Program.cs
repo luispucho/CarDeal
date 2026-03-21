@@ -158,7 +158,8 @@ _ = Task.Run(async () =>
 
         var adminEmail = builder.Configuration["AdminSeed:Email"] ?? "admin@cardeal.com";
         var adminPassword = builder.Configuration["AdminSeed:Password"] ?? "Admin123!";
-        if (await userManager.FindByEmailAsync(adminEmail) == null)
+        var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
+        if (existingAdmin == null)
         {
             var admin = new User
             {
@@ -173,6 +174,14 @@ _ = Task.Run(async () =>
                 await userManager.AddToRoleAsync(admin, "Admin");
                 await userManager.AddToRoleAsync(admin, "SuperAdmin");
             }
+        }
+        else
+        {
+            // Ensure existing admin has all required roles
+            if (!await userManager.IsInRoleAsync(existingAdmin, "Admin"))
+                await userManager.AddToRoleAsync(existingAdmin, "Admin");
+            if (!await userManager.IsInRoleAsync(existingAdmin, "SuperAdmin"))
+                await userManager.AddToRoleAsync(existingAdmin, "SuperAdmin");
         }
         logger.LogInformation("Database seeding completed.");
     }
