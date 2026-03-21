@@ -8,3 +8,5 @@ public record DashboardStatsResponse(
     int TotalUsers,
     List<CarResponse> RecentSubmissions
 );
+
+public record ToggleFeaturedRequest(bool IsFeatured);

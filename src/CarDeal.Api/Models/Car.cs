@@ -15,6 +15,8 @@ public class Car
     public string? Condition { get; set; } // Excellent, Good, Fair, Poor
     public string? Description { get; set; }
     public decimal? AskingPrice { get; set; }
+    public bool IsFeatured { get; set; }
+    public ListingType ListingType { get; set; } = ListingType.Consigned;
     public CarStatus Status { get; set; } = CarStatus.Pending;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -22,6 +24,14 @@ public class Car
     public ICollection<CarImage> Images { get; set; } = new List<CarImage>();
     public ICollection<Offer> Offers { get; set; } = new List<Offer>();
     public Consignment? Consignment { get; set; }
+}
+
+public enum ListingType
+{
+    Consigned,
+    Inventory,
+    CertifiedInventory,
+    TrustedPartner
 }
 
 public enum CarStatus

@@ -15,6 +15,8 @@ import DashboardPage from './pages/admin/DashboardPage';
 import CarReviewPage from './pages/admin/CarReviewPage';
 import MakeOfferPage from './pages/admin/MakeOfferPage';
 import ConsignmentsPage from './pages/admin/ConsignmentsPage';
+import InventoryPage from './pages/InventoryPage';
+import PublicCarDetailPage from './pages/PublicCarDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const queryClient = new QueryClient({
@@ -33,6 +35,8 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="/inventory/:id" element={<PublicCarDetailPage />} />
               <Route
                 path="/my-cars"
                 element={<ProtectedRoute><MyCarsPage /></ProtectedRoute>}

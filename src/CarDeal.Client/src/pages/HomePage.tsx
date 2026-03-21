@@ -1,10 +1,18 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import { publicApi, type PublicCar } from '../api/public';
+import ListingRibbon from '../components/common/ListingRibbon';
 
 export default function HomePage() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
+
+  const { data: featuredCars } = useQuery({
+    queryKey: ['featuredCars'],
+    queryFn: publicApi.getFeatured,
+  });
 
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-8">
@@ -105,6 +113,69 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Featured Vehicles ── */}
+      {featuredCars && featuredCars.length > 0 && (
+        <section className="bg-white py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3">
+                {t('home.featuredTitle')}
+              </h2>
+              <p className="text-gray-500 text-lg">{t('home.featuredSubtitle')}</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCars.map((car: PublicCar) => {
+                const primaryImage = car.images.find(i => i.isPrimary) ?? car.images[0];
+                return (
+                  <Link
+                    key={car.id}
+                    to={`/inventory/${car.id}`}
+                    className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group"
+                  >
+                    <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                      <ListingRibbon listingType={car.listingType} />
+                      {primaryImage ? (
+                        <img
+                          src={primaryImage.blobUrl}
+                          alt={`${car.year} ${car.make} ${car.model}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-6xl text-gray-300">🚗</div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-gray-900 text-lg">
+                        {car.year} {car.make} {car.model}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
+                        <span>{car.mileage.toLocaleString()} {t('common.mi')}</span>
+                        {car.condition && (
+                          <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                            {car.condition}
+                          </span>
+                        )}
+                      </div>
+                      {car.askingPrice != null && (
+                        <p className="mt-3 text-xl font-bold text-green-600">${car.askingPrice.toLocaleString()}</p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="text-center mt-10">
+              <Link
+                to="/inventory"
+                className="inline-flex items-center justify-center bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all duration-200 shadow-lg hover:-translate-y-0.5"
+              >
+                {t('home.viewInventory')}
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Advantages ── */}
       <section className="bg-white py-20">

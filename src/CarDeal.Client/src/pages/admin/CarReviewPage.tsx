@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminApi } from '../../api/admin';
 import { messagesApi } from '../../api/messages';
@@ -9,6 +9,7 @@ export default function CarReviewPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [messageBody, setMessageBody] = useState('');
+  const queryClient = useQueryClient();
 
   const { data: car, isLoading } = useQuery({
     queryKey: ['adminCar', id],
@@ -26,6 +27,13 @@ export default function CarReviewPage() {
     onSuccess: () => {
       setMessageBody('');
       alert(t('adminReview.messageSent'));
+    },
+  });
+
+  const featuredMutation = useMutation({
+    mutationFn: (isFeatured: boolean) => adminApi.toggleFeatured(Number(id), isFeatured),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminCar', id] });
     },
   });
 
@@ -58,6 +66,22 @@ export default function CarReviewPage() {
           </Link>
         </div>
       </div>
+
+      {/* Featured Toggle */}
+      {car.status === 'Consigned' && (
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-6 flex items-center gap-3">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={car.isFeatured ?? false}
+              onChange={e => featuredMutation.mutate(e.target.checked)}
+              disabled={featuredMutation.isPending}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm font-medium text-gray-700">{t('adminReview.featureOnHomepage')}</span>
+          </label>
+        </div>
+      )}
 
       {/* Images */}
       {car.images.length > 0 && (

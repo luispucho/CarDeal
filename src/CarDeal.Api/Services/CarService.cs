@@ -15,6 +15,7 @@ public interface ICarService
     Task<bool> DeleteAsync(int id, string userId);
     Task<CarImageResponse> AddImageAsync(int carId, string userId, Stream stream, string fileName, string contentType);
     Task<bool> RemoveImageAsync(int carId, int imageId, string userId);
+    Task SetFeaturedAsync(int carId, bool isFeatured);
 }
 
 public class CarService : ICarService
@@ -161,8 +162,18 @@ public class CarService : ICarService
         car.Id, car.UserId, car.User.FullName,
         car.Make, car.Model, car.Year, car.Mileage,
         car.VIN, car.Color, car.Condition, car.Description, car.AskingPrice,
+        car.IsFeatured,
         car.Status.ToString(), car.CreatedAt, car.UpdatedAt,
         car.Images.Select(i => new CarImageResponse(i.Id, i.BlobUrl, i.FileName, i.IsPrimary, i.UploadedAt)).ToList(),
         car.Offers.Select(o => new OfferResponse(o.Id, o.CarId, o.AdminUserId, o.AdminUser.FullName, o.Amount, o.Notes, o.Status.ToString(), o.CreatedAt, o.UpdatedAt)).ToList()
     );
+
+    public async Task SetFeaturedAsync(int carId, bool isFeatured)
+    {
+        var car = await _db.Cars.FindAsync(carId);
+        if (car == null) throw new KeyNotFoundException("Car not found");
+        car.IsFeatured = isFeatured;
+        car.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+    }
 }

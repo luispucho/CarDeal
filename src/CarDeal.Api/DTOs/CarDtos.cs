@@ -39,11 +39,26 @@ public record CarResponse(
     string? Condition,
     string? Description,
     decimal? AskingPrice,
+    bool IsFeatured,
     string Status,
     DateTime CreatedAt,
     DateTime UpdatedAt,
     List<CarImageResponse> Images,
     List<OfferResponse>? Offers
+);
+
+public record PublicCarResponse(
+    int Id,
+    string Make,
+    string Model,
+    int Year,
+    int Mileage,
+    string? Color,
+    string? Condition,
+    string? Description,
+    decimal? AskingPrice,
+    string ListingType,
+    List<CarImageResponse> Images
 );
 
 public record CarImageResponse(int Id, string BlobUrl, string FileName, bool IsPrimary, DateTime UploadedAt);

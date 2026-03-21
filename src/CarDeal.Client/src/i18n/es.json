@@ -28,7 +28,8 @@
   "nav": {
     "brand": "🚗 CarDeal",
     "adminBadge": "Admin",
-    "adminLink": "⚙ Admin"
+    "adminLink": "⚙ Admin",
+    "inventory": "Inventario"
   },
   "home": {
     "heroTitle": "Vende Tu Auto con",
@@ -66,7 +67,10 @@
     "ctaTitle": "¿Listo para Vender Tu Auto?",
     "ctaSubtitle": "Únete a miles de vendedores satisfechos. Envía tu auto hoy y recibe una oferta justa en 24 horas.",
     "ctaPrimary": "Envía Tu Auto Ahora",
-    "ctaSecondary": "Más Información"
+    "ctaSecondary": "Más Información",
+    "featuredTitle": "Vehículos Destacados",
+    "featuredSubtitle": "Autos seleccionados listos para ti",
+    "viewInventory": "Ver Todo el Inventario"
   },
   "auth": {
     "signIn": "Iniciar Sesión",
@@ -188,7 +192,8 @@
     "sendToOwner": "Enviar Mensaje al Propietario",
     "typeYourMessage": "Escribe tu mensaje...",
     "sendMessage": "Enviar Mensaje",
-    "messageSent": "¡Mensaje enviado!"
+    "messageSent": "¡Mensaje enviado!",
+    "featureOnHomepage": "⭐ Destacar en Inicio"
   },
   "adminOffer": {
     "backToReview": "← Volver a Revisión",
@@ -254,5 +259,29 @@
     "orContinueWith": "o continuar con",
     "google": "Continuar con Google",
     "github": "Continuar con GitHub"
+  },
+  "inventory": {
+    "title": "Inventario de Autos",
+    "subtitle": "Explora nuestra colección de vehículos de calidad",
+    "searchMake": "Buscar por marca...",
+    "allYears": "Todos los Años",
+    "allPrices": "Todos los Precios",
+    "sortBy": "Ordenar por",
+    "newest": "Más Recientes",
+    "priceAsc": "Precio: Menor a Mayor",
+    "priceDesc": "Precio: Mayor a Menor",
+    "yearDesc": "Año: Más Reciente",
+    "mileageAsc": "Kilometraje: Menor",
+    "noCarsFound": "No se encontraron autos con esos criterios",
+    "interested": "¿Interesado en este auto?",
+    "registerCta": "Regístrate para comenzar",
+    "featured": "⭐ Destacado",
+    "allTypes": "Todos los Tipos"
+  },
+  "listingType": {
+    "Consigned": "Consignado",
+    "Inventory": "Inventario",
+    "CertifiedInventory": "Certificado",
+    "TrustedPartner": "Socio de Confianza"
   }
 }

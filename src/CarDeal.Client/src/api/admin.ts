@@ -32,4 +32,7 @@ export const adminApi = {
 
   getConsignments: (status?: string) =>
     apiClient.get<Consignment[]>('/admin/consignments', { params: { status } }).then((r) => r.data),
+
+  toggleFeatured: (carId: number, isFeatured: boolean) =>
+    apiClient.put(`/admin/cars/${carId}/featured`, { isFeatured }).then((r) => r.data),
 };
