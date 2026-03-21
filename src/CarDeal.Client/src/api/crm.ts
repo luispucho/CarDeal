@@ -161,4 +161,34 @@ export const crmApi = {
 
   resetTenantAdmin: (tenantId: number) =>
     apiClient.post(`/crm/admin/tenants/${tenantId}/reset-admin`).then((r) => r.data),
+
+  // Platforms
+  getPlatforms: () =>
+    apiClient.get<any[]>('/crm/platforms').then((r) => r.data),
+
+  // Connections
+  getConnections: () =>
+    apiClient.get<any[]>('/crm/connections').then((r) => r.data),
+
+  createConnection: (data: { platformId: number; apiKey?: string; apiSecret?: string; accessToken?: string; accountId?: string }) =>
+    apiClient.post('/crm/connections', data).then((r) => r.data),
+
+  updateConnection: (id: number, data: any) =>
+    apiClient.put(`/crm/connections/${id}`, data).then((r) => r.data),
+
+  deleteConnection: (id: number) =>
+    apiClient.delete(`/crm/connections/${id}`),
+
+  // Publications
+  getPublications: (carId: number) =>
+    apiClient.get<any[]>(`/crm/inventory/${carId}/publications`).then((r) => r.data),
+
+  publishCar: (carId: number, connectionId: number) =>
+    apiClient.post(`/crm/inventory/${carId}/publish`, { connectionId }).then((r) => r.data),
+
+  updatePublication: (pubId: number) =>
+    apiClient.put(`/crm/publications/${pubId}/update`).then((r) => r.data),
+
+  unpublishCar: (pubId: number) =>
+    apiClient.post(`/crm/publications/${pubId}/unpublish`).then((r) => r.data),
 };

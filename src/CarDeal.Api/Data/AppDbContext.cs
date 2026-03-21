@@ -18,6 +18,9 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<CarFinancials> CarFinancials => Set<CarFinancials>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<CrmNote> CrmNotes => Set<CrmNote>();
+    public DbSet<ExternalPlatform> ExternalPlatforms => Set<ExternalPlatform>();
+    public DbSet<PlatformConnection> PlatformConnections => Set<PlatformConnection>();
+    public DbSet<CarPublication> CarPublications => Set<CarPublication>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -102,6 +105,34 @@ public class AppDbContext : IdentityDbContext<User>
             e.HasOne(n => n.Car).WithMany(c => c.CrmNotes).HasForeignKey(n => n.CarId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(n => n.Author).WithMany().HasForeignKey(n => n.AuthorUserId).OnDelete(DeleteBehavior.NoAction);
             e.HasIndex(n => n.CarId);
+        });
+
+        builder.Entity<ExternalPlatform>(e =>
+        {
+            e.HasIndex(p => p.Slug).IsUnique();
+            e.HasData(
+                new ExternalPlatform { Id = 1, Name = "Facebook Marketplace", Slug = "facebook", Description = "List on Facebook Marketplace" },
+                new ExternalPlatform { Id = 2, Name = "Craigslist", Slug = "craigslist", Description = "Post to Craigslist auto section" },
+                new ExternalPlatform { Id = 3, Name = "Cars.com", Slug = "carscom", Description = "List on Cars.com" },
+                new ExternalPlatform { Id = 4, Name = "AutoTrader", Slug = "autotrader", Description = "List on AutoTrader" },
+                new ExternalPlatform { Id = 5, Name = "CarGurus", Slug = "cargurus", Description = "List on CarGurus" },
+                new ExternalPlatform { Id = 6, Name = "OfferUp", Slug = "offerup", Description = "List on OfferUp" }
+            );
+        });
+
+        builder.Entity<PlatformConnection>(e =>
+        {
+            e.HasOne(pc => pc.Tenant).WithMany().HasForeignKey(pc => pc.TenantId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(pc => pc.Platform).WithMany().HasForeignKey(pc => pc.PlatformId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(pc => pc.TenantId);
+        });
+
+        builder.Entity<CarPublication>(e =>
+        {
+            e.HasOne(cp => cp.Car).WithMany(c => c.Publications).HasForeignKey(cp => cp.CarId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(cp => cp.Connection).WithMany().HasForeignKey(cp => cp.PlatformConnectionId).OnDelete(DeleteBehavior.NoAction);
+            e.HasIndex(cp => cp.CarId);
+            e.HasIndex(cp => cp.PlatformConnectionId);
         });
     }
 }

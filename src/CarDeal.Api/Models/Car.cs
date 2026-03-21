@@ -31,6 +31,7 @@ public class Car
     public CarFinancials? Financials { get; set; }
     public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
     public ICollection<CrmNote> CrmNotes { get; set; } = new List<CrmNote>();
+    public ICollection<CarPublication> Publications { get; set; } = new List<CarPublication>();
 }
 
 public enum ListingType
