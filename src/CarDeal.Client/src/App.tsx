@@ -10,6 +10,7 @@ import MyCarsPage from './pages/MyCarsPage';
 import SubmitCarPage from './pages/SubmitCarPage';
 import CarDetailPage from './pages/CarDetailPage';
 import InboxPage from './pages/InboxPage';
+import ProfilePage from './pages/ProfilePage';
 import DashboardPage from './pages/admin/DashboardPage';
 import CarReviewPage from './pages/admin/CarReviewPage';
 import MakeOfferPage from './pages/admin/MakeOfferPage';
@@ -47,6 +48,10 @@ export default function App() {
               <Route
                 path="/inbox"
                 element={<ProtectedRoute><InboxPage /></ProtectedRoute>}
+              />
+              <Route
+                path="/profile"
+                element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
               />
               <Route
                 path="/admin"

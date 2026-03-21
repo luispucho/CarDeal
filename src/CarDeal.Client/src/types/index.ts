@@ -3,7 +3,22 @@ export interface UserDto {
   email: string;
   fullName: string;
   phone?: string;
+  profilePictureUrl?: string;
   role: string;
+}
+
+export interface ProfileResponse {
+  id: string;
+  email: string;
+  fullName: string;
+  phone?: string;
+  profilePictureUrl?: string;
+  createdAt: string;
+}
+
+export interface UpdateProfileRequest {
+  fullName: string;
+  phone?: string;
 }
 
 export interface AuthResponse {
