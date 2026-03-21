@@ -1,15 +1,16 @@
 # CarDeal 🚗
 
-A modern car consignment platform where users can submit their vehicles for sale, receive offers, and manage the consignment process — all through a clean, responsive web interface.
+A multi-tenant car dealership platform with an integrated CRM. Car dealers manage inventory, track costs, and sell vehicles while individual sellers consign their cars through a transparent process.
 
 ## What It Does
 
-CarDeal connects car owners with a consignment service:
+CarDeal is a full-featured marketplace connecting car dealers, sellers, and buyers:
 
-1. **Sellers** register and submit their vehicles with photos, descriptions, and asking prices
-2. **Admins** review submissions, make offers, and negotiate terms
-3. Once agreed, cars are **consigned** for sale with transparent pricing and commission tracking
-4. Built-in **messaging** keeps sellers and admins in sync throughout the process
+1. **Buyers** browse the public inventory, filter by make/year/price, and view detailed listings
+2. **Sellers** register and submit vehicles for consignment with photos and asking prices
+3. **Dealers** (tenants) manage their inventory, track purchase/sale costs, and handle consignments
+4. **Admins** review submissions, make offers, negotiate terms, and manage employees
+5. **Super Admins** oversee the entire platform — create tenants, view analytics, manage dealers
 
 ## Live Demo
 
@@ -19,17 +20,14 @@ CarDeal connects car owners with a consignment service:
 | **API** | https://cardeal-api.azurewebsites.net/api |
 | **API Docs** | https://cardeal-api.azurewebsites.net/scalar/v1 |
 
-## Screenshots
-
-> *Coming soon*
-
 ## Tech Stack
 
 ### Backend
 - **ASP.NET Core 10** — RESTful API with controllers
 - **Entity Framework Core 10** — SQL Server ORM with code-first migrations
 - **ASP.NET Identity + JWT** — Authentication and role-based authorization
-- **Azure Blob Storage** — Car image hosting (with local file fallback for dev)
+- **Google + GitHub OAuth** — Social login support
+- **Azure Blob Storage** — Car/profile image hosting (with local file fallback for dev)
 
 ### Frontend
 - **React 19** with **TypeScript** — Component-based UI
@@ -42,7 +40,7 @@ CarDeal connects car owners with a consignment service:
 
 ### Infrastructure
 - **GitHub Actions** — CI/CD pipelines for API and Client
-- **Azure App Service** — API hosting
+- **Azure App Service** — API hosting (.NET 10)
 - **Azure Static Web Apps** — Client hosting
 - **SQL Server** — Production database (LocalDB for development)
 
@@ -61,7 +59,7 @@ CarDeal connects car owners with a consignment service:
 git clone https://github.com/luispucho/CarDeal.git
 cd CarDeal
 
-# Start the API (auto-applies migrations and seeds admin user)
+# Start the API (auto-applies migrations and seeds roles + super admin)
 cd src/CarDeal.Api
 dotnet restore
 dotnet run
@@ -76,49 +74,99 @@ npm run dev
 
 ### Default Credentials
 
-| Role  | Email               | Password    |
-|-------|---------------------|-------------|
-| Admin | admin@cardeal.com   | Admin123!   |
+| Role        | Email               | Password    | Access |
+|-------------|---------------------|-------------|--------|
+| Super Admin | admin@cardeal.com   | Admin123!   | Full platform control, CRM, tenant management |
 
-Register a new account through the UI to use the app as a regular seller.
+The seeded admin has both **SuperAdmin** and **Admin** roles. Register a new account through the UI to use the app as a regular seller.
+
+### Seeded Roles
+
+| Role | Description |
+|------|-------------|
+| **SuperAdmin** | Platform-wide management — tenants, analytics, user management |
+| **Admin** | Car review, offers, consignment management |
+| **TenantAdmin** | Dealership management — employees, CRM, inventory costs |
+| **User** | Submit cars for consignment, manage own listings |
 
 ## Features
 
+### 🏪 Public Marketplace
+- 🔍 **Car Inventory** — Public browsable catalog with filters (make, year, price, listing type, sort)
+- 🏷️ **Listing Ribbons** — Color-coded badges: Consigned (gray), Inventory (blue), Certified (gold), Trusted Partner (silver)
+- ⭐ **Featured Cars** — Admin-promoted vehicles showcased on the homepage
+- 🚗 **Car Detail Pages** — Full image carousel with lightbox, keyboard navigation, and thumbnails
+
+### 👤 User Features
 - 🚘 **Car Submission** — Add vehicles with make, model, year, mileage, condition, VIN, photos, and asking price
-- 📷 **Image Uploads** — Multiple photos per car (max 10, 5MB each)
-- 💰 **Offer System** — Admins make and manage offers on submitted cars
-- 📝 **Consignment Management** — Track agreed prices, commissions, and consignment status
+- ✏️ **Edit Listings** — Inline editing for pending cars
+- 📷 **Image Management** — Upload up to 10 photos (5MB each), styled upload buttons, delete with confirmation
+- 👤 **Profile Management** — Edit name, phone, upload profile picture
+- 🗑️ **Account Deletion** — Delete account with double confirmation (active cars marked as Withdrawn)
 - 💬 **Messaging** — In-app communication between sellers and admins
-- 📊 **Admin Dashboard** — Overview of submissions, active offers, and consignments
+
+### 🏢 Multi-Tenancy
+- 🏪 **Tenant System** — Multiple car dealers/organizations on one platform
+- 👥 **Employee Management** — Tenant admins add/remove dealership employees
+- 🔒 **Scoped Access** — Dealers only see their own tenant's data
+- 🤝 **Shared Inventory** — Inventory cars visible across tenants as "Trusted Partner"
+- 🔐 **Consignment Privacy** — Consigned cars stay private to their tenant
+
+### 📊 CRM (Customer Relationship Management)
+- 📊 **Dashboard** — Platform stats (SuperAdmin) or dealership stats (revenue, profit, monthly sales)
+- 💰 **Cost Tracking** — Track purchase price, sale price, and profit per car
+- 🧾 **Expense Management** — Log repairs, marketing, transport, inspection costs per vehicle
+- 📝 **Communication Notes** — Internal notes timeline per car with author tracking
+- 👥 **Employee Management** — TenantAdmin adds/removes dealership employees
+
+### 🔐 Auth & Security
+- 🔑 **JWT Authentication** — Secure token-based auth with refresh tokens
+- 🌐 **Social Login** — Google and GitHub OAuth
+- 👮 **Role-Based Access** — SuperAdmin, Admin, TenantAdmin, User
 - 🌐 **Multi-Language** — Full English and Spanish support, admin-controlled
+
+### 🎨 UX
 - 📱 **Responsive Design** — Works on desktop, tablet, and mobile
-- 🔒 **Secure** — JWT authentication with role-based access control
+- 🚧 **Fun 404 Page** — Car crash animation with 5-second auto-redirect
+- 🖼️ **Image Carousel** — Fullscreen lightbox with arrows, keyboard nav, thumbnails
 
 ## Project Structure
 
 ```
 CarDeal/
 ├── src/
-│   ├── CarDeal.Api/          # .NET backend
-│   │   ├── Controllers/      # API endpoints
-│   │   ├── Models/           # Domain entities
-│   │   ├── DTOs/             # Request/response objects
-│   │   ├── Services/         # Business logic
-│   │   ├── Data/             # EF Core context
-│   │   └── Migrations/       # Database migrations
+│   ├── CarDeal.Api/              # .NET 10 backend
+│   │   ├── Controllers/          # API endpoints
+│   │   │   ├── AuthController    # Login, register, social auth
+│   │   │   ├── CarsController    # User car CRUD
+│   │   │   ├── AdminController   # Admin car review, offers
+│   │   │   ├── PublicController  # Public inventory (no auth)
+│   │   │   ├── ProfileController # User profile + account deletion
+│   │   │   ├── TenantController  # SuperAdmin tenant management
+│   │   │   ├── CrmController     # CRM inventory, expenses, stats
+│   │   │   └── ...
+│   │   ├── Models/               # Domain entities
+│   │   ├── DTOs/                 # Request/response objects
+│   │   ├── Services/             # Business logic
+│   │   ├── Data/                 # EF Core context
+│   │   └── Migrations/           # Database migrations
 │   │
-│   └── CarDeal.Client/       # React frontend
+│   └── CarDeal.Client/           # React 19 frontend
 │       └── src/
-│           ├── pages/        # Route components
-│           ├── components/   # Reusable UI
-│           ├── api/          # API service layer
-│           ├── context/      # Auth state
-│           ├── types/        # TypeScript interfaces
-│           └── i18n/         # Translations
+│           ├── pages/            # Route components
+│           │   ├── crm/          # CRM pages (dashboard, inventory, employees)
+│           │   ├── admin/        # Admin pages (dashboard, review, offers)
+│           │   └── ...           # Public + user pages
+│           ├── components/       # Reusable UI (Layout, ListingRibbon, etc.)
+│           ├── api/              # API service layer
+│           ├── context/          # Auth state (AuthContext)
+│           ├── types/            # TypeScript interfaces
+│           └── i18n/             # Translations (en + es)
 │
-├── .github/workflows/        # CI/CD pipelines
-├── CLAUDE.md                 # AI assistant instructions
-└── CarDeal.sln               # Solution file
+├── .github/workflows/            # CI/CD pipelines
+├── CLAUDE.md                     # AI assistant instructions
+├── nuget.config                  # NuGet package source
+└── CarDeal.sln                   # Solution file
 ```
 
 ## License
