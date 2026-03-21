@@ -15,4 +15,5 @@ export const profileApi = {
   },
   deletePicture: () =>
     apiClient.delete<ProfileResponse>('/profile/picture').then(r => r.data),
+  deleteAccount: () => apiClient.delete('/profile'),
 };

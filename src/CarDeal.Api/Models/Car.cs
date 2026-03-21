@@ -44,5 +44,6 @@ public enum CarStatus
     Offered,
     Consigned,
     Sold,
-    Rejected
+    Rejected,
+    Withdrawn
 }

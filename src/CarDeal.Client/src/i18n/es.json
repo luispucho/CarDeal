@@ -145,7 +145,8 @@
     "Offered": "Ofertado",
     "Consigned": "Consignado",
     "Sold": "Vendido",
-    "Rejected": "Rechazado"
+    "Rejected": "Rechazado",
+    "Withdrawn": "Retirado"
   },
   "offerStatus": {
     "Pending": "Pendiente",
@@ -254,7 +255,12 @@
     "error": "Error al actualizar el perfil",
     "pictureUploaded": "¡Foto subida!",
     "pictureRemoved": "Foto eliminada",
-    "pictureError": "Error al actualizar la foto"
+    "pictureError": "Error al actualizar la foto",
+    "dangerZone": "Zona de Peligro",
+    "deleteAccount": "Eliminar Mi Cuenta",
+    "deleteWarning": "Eliminar permanentemente tu cuenta y todos tus datos. Las publicaciones activas de autos serán marcadas como retiradas y removidas del inventario.",
+    "confirmDelete": "¿Estás seguro de que quieres eliminar tu cuenta? Esto no se puede deshacer.",
+    "confirmDeleteFinal": "Esta acción es PERMANENTE. Escribe DELETE para confirmar:"
   },
   "socialLogin": {
     "orContinueWith": "o continuar con",
