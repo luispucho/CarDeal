@@ -22,10 +22,11 @@ public class PublicController : ControllerBase
     {
         var query = _db.Cars
             .Include(c => c.Images)
-            .Where(c => c.Status == CarStatus.Consigned ||
-                        c.ListingType == Models.ListingType.Inventory ||
+            .Include(c => c.Tenant)
+            .Where(c => c.ListingType == Models.ListingType.Inventory ||
                         c.ListingType == Models.ListingType.CertifiedInventory ||
-                        c.ListingType == Models.ListingType.TrustedPartner)
+                        c.ListingType == Models.ListingType.TrustedPartner ||
+                        (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null))
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(make))
@@ -55,11 +56,12 @@ public class PublicController : ControllerBase
     {
         var cars = await _db.Cars
             .Include(c => c.Images)
+            .Include(c => c.Tenant)
             .Where(c => c.IsFeatured && (
-                c.Status == CarStatus.Consigned ||
                 c.ListingType == Models.ListingType.Inventory ||
                 c.ListingType == Models.ListingType.CertifiedInventory ||
-                c.ListingType == Models.ListingType.TrustedPartner))
+                c.ListingType == Models.ListingType.TrustedPartner ||
+                (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null)))
             .OrderByDescending(c => c.UpdatedAt)
             .Take(6)
             .ToListAsync();
@@ -72,11 +74,12 @@ public class PublicController : ControllerBase
     {
         var car = await _db.Cars
             .Include(c => c.Images)
+            .Include(c => c.Tenant)
             .FirstOrDefaultAsync(c => c.Id == id && (
-                c.Status == CarStatus.Consigned ||
                 c.ListingType == Models.ListingType.Inventory ||
                 c.ListingType == Models.ListingType.CertifiedInventory ||
-                c.ListingType == Models.ListingType.TrustedPartner));
+                c.ListingType == Models.ListingType.TrustedPartner ||
+                (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null)));
 
         return car == null ? NotFound() : Ok(MapToPublic(car));
     }
@@ -85,6 +88,7 @@ public class PublicController : ControllerBase
         car.Id, car.Make, car.Model, car.Year, car.Mileage,
         car.Color, car.Condition, car.Description, car.AskingPrice,
         car.ListingType.ToString(),
+        car.Tenant?.Name, car.TenantId,
         car.Images.Select(i => new CarImageResponse(i.Id, i.BlobUrl, i.FileName, i.IsPrimary, i.UploadedAt)).ToList()
     );
 }

@@ -30,6 +30,9 @@ function CarCard({ car }: { car: PublicCar }) {
         <h3 className="font-bold text-gray-900 text-lg">
           {car.year} {car.make} {car.model}
         </h3>
+        {car.tenantName && (
+          <p className="text-xs text-gray-400 mt-0.5">{car.tenantName}</p>
+        )}
         <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
           <span>{car.mileage.toLocaleString()} {t('common.mi')}</span>
           {car.condition && (

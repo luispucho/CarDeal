@@ -29,7 +29,8 @@
     "brand": "🚗 CarDeal",
     "adminBadge": "Admin",
     "adminLink": "⚙ Admin",
-    "inventory": "Inventory"
+    "inventory": "Inventory",
+    "tenants": "Tenants"
   },
   "home": {
     "heroTitle": "Sell Your Car with",
@@ -283,5 +284,26 @@
     "Inventory": "Inventory",
     "CertifiedInventory": "Certified",
     "TrustedPartner": "Trusted Partner"
+  },
+  "tenants": {
+    "title": "Tenant Management",
+    "createTenant": "Create Tenant",
+    "name": "Name",
+    "slug": "Slug",
+    "contactEmail": "Contact Email",
+    "users": "Users",
+    "cars": "Cars",
+    "manageUsers": "Manage Users",
+    "assignUser": "Assign User",
+    "userIdPlaceholder": "Enter user ID",
+    "removeTenant": "Delete Tenant",
+    "confirmDelete": "Are you sure you want to delete this tenant?",
+    "noTenants": "No tenants created yet",
+    "created": "Tenant created!",
+    "updated": "Tenant updated!",
+    "deleted": "Tenant deleted",
+    "userAssigned": "User assigned to tenant",
+    "userRemoved": "User removed from tenant",
+    "soldBy": "Sold by"
   }
 }

@@ -8,6 +8,7 @@ public class AppDbContext : IdentityDbContext<User>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+    public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Car> Cars => Set<Car>();
     public DbSet<CarImage> CarImages => Set<CarImage>();
     public DbSet<Offer> Offers => Set<Offer>();
@@ -53,6 +54,23 @@ public class AppDbContext : IdentityDbContext<User>
             e.HasOne(m => m.Car).WithMany().HasForeignKey(m => m.CarId).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(m => m.ReceiverId);
             e.HasIndex(m => m.SenderId);
+        });
+
+        builder.Entity<Tenant>(e =>
+        {
+            e.HasIndex(t => t.Slug).IsUnique();
+        });
+
+        builder.Entity<User>(e =>
+        {
+            e.HasOne(u => u.Tenant).WithMany(t => t.Users).HasForeignKey(u => u.TenantId).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(u => u.TenantId);
+        });
+
+        builder.Entity<Car>(e2 =>
+        {
+            e2.HasOne(c => c.Tenant).WithMany(t => t.Cars).HasForeignKey(c => c.TenantId).OnDelete(DeleteBehavior.SetNull);
+            e2.HasIndex(c => c.TenantId);
         });
 
         builder.Entity<SiteSetting>(e =>

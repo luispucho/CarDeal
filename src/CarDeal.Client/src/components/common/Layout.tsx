@@ -8,7 +8,7 @@ import { settingsApi } from '../../api/settings';
 
 export default function Layout() {
   const { t, i18n } = useTranslation();
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, isSuperAdmin, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,6 +64,11 @@ export default function Layout() {
                   {isAdmin && (
                     <Link to="/admin" className="text-gray-700 hover:text-blue-600 transition font-medium">
                       {t('nav.adminLink')}
+                    </Link>
+                  )}
+                  {isSuperAdmin && (
+                    <Link to="/admin/tenants" className="text-gray-700 hover:text-blue-600 transition font-medium">
+                      {t('nav.tenants')}
                     </Link>
                   )}
                 </>

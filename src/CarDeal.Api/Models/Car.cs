@@ -21,6 +21,9 @@ public class Car
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
+    public int? TenantId { get; set; }
+    public Tenant? Tenant { get; set; }
+    
     public ICollection<CarImage> Images { get; set; } = new List<CarImage>();
     public ICollection<Offer> Offers { get; set; } = new List<Offer>();
     public Consignment? Consignment { get; set; }

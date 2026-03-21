@@ -140,7 +140,7 @@ _ = Task.Run(async () =>
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<User>>();
 
-        string[] roles = { "Admin", "User" };
+        string[] roles = { "Admin", "User", "SuperAdmin" };
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -160,7 +160,10 @@ _ = Task.Run(async () =>
             };
             var result = await userManager.CreateAsync(admin, adminPassword);
             if (result.Succeeded)
+            {
                 await userManager.AddToRoleAsync(admin, "Admin");
+                await userManager.AddToRoleAsync(admin, "SuperAdmin");
+            }
         }
         logger.LogInformation("Database seeding completed.");
     }

@@ -29,7 +29,8 @@
     "brand": "🚗 CarDeal",
     "adminBadge": "Admin",
     "adminLink": "⚙ Admin",
-    "inventory": "Inventario"
+    "inventory": "Inventario",
+    "tenants": "Inquilinos"
   },
   "home": {
     "heroTitle": "Vende Tu Auto con",
@@ -283,5 +284,26 @@
     "Inventory": "Inventario",
     "CertifiedInventory": "Certificado",
     "TrustedPartner": "Socio de Confianza"
+  },
+  "tenants": {
+    "title": "Gestión de Inquilinos",
+    "createTenant": "Crear Inquilino",
+    "name": "Nombre",
+    "slug": "Identificador",
+    "contactEmail": "Correo de Contacto",
+    "users": "Usuarios",
+    "cars": "Autos",
+    "manageUsers": "Gestionar Usuarios",
+    "assignUser": "Asignar Usuario",
+    "userIdPlaceholder": "Ingrese ID de usuario",
+    "removeTenant": "Eliminar Inquilino",
+    "confirmDelete": "¿Estás seguro de que quieres eliminar este inquilino?",
+    "noTenants": "No hay inquilinos creados",
+    "created": "¡Inquilino creado!",
+    "updated": "¡Inquilino actualizado!",
+    "deleted": "Inquilino eliminado",
+    "userAssigned": "Usuario asignado al inquilino",
+    "userRemoved": "Usuario removido del inquilino",
+    "soldBy": "Vendido por"
   }
 }
