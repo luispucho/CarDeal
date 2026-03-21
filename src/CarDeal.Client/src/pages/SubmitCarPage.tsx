@@ -129,13 +129,19 @@ export default function SubmitCarPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('cars.photosLimit')}</label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 10))}
-            className="w-full border rounded-lg px-4 py-2"
-          />
+          <label className="inline-flex items-center gap-2 cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+            </svg>
+            {t('cars.addPhotos')}
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 10))}
+            />
+          </label>
           {files.length > 0 && (
             <p className="text-sm text-gray-500 mt-1">{t('cars.filesSelected', { count: files.length })}</p>
           )}
