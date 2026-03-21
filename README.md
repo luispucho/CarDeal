@@ -11,6 +11,14 @@ CarDeal connects car owners with a consignment service:
 3. Once agreed, cars are **consigned** for sale with transparent pricing and commission tracking
 4. Built-in **messaging** keeps sellers and admins in sync throughout the process
 
+## Live Demo
+
+| Service | URL |
+|---------|-----|
+| **Client** | https://orange-beach-07fca1b0f.4.azurestaticapps.net |
+| **API** | https://cardeal-api.azurewebsites.net/api |
+| **API Docs** | https://cardeal-api.azurewebsites.net/scalar/v1 |
+
 ## Screenshots
 
 > *Coming soon*
