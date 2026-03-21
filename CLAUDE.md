@@ -22,7 +22,7 @@ CarDeal is a car consignment platform where users submit vehicles for sale and a
 cd src/CarDeal.Api
 dotnet restore
 dotnet build
-dotnet run          # https://localhost:7001 — migrations run automatically on startup
+dotnet run          # http://localhost:5228 — migrations run automatically on startup
 ```
 
 ### Client
@@ -30,19 +30,40 @@ dotnet run          # https://localhost:7001 — migrations run automatically on
 ```bash
 cd src/CarDeal.Client
 npm install
-npm run dev         # http://localhost:5173 — proxies API calls to localhost:7001
+npm run dev         # http://localhost:5173 — proxies API calls to localhost:5228
 ```
 
 ### Prerequisites
 
-- .NET 9.0 SDK
+- .NET 10.0 SDK (project retargeted from net9.0)
 - Node.js 22+ with npm
 - SQL Server LocalDB
-- Azurite (Azure Storage Emulator) for image uploads
+- Azurite (Azure Storage Emulator) — **optional** for local dev (see Image Storage below)
+
+### Image Storage
+
+- **Production**: Azure Blob Storage
+- **Local dev**: When `Azure:BlobStorage:ConnectionString` is `UseDevelopmentStorage=true` and Azurite is not running, the API automatically falls back to `LocalBlobStorageService`, which stores images under `wwwroot/uploads/car-images/`. No setup needed.
+- **With Azurite**: Install and run Azurite (`npm install -g azurite && azurite`) for full Azure Blob emulation on port 10000.
 
 ### Test Credentials
 
 - **Admin**: `admin@cardeal.com` / `Admin123!` (seeded on startup)
+
+### Seeding Sample Cars via API
+
+After starting the API, you can create sample cars with PowerShell:
+
+```powershell
+# Register or login a user
+$body = '{"email":"john.doe@email.com","password":"TestUser1","fullName":"John Doe"}'
+$resp = Invoke-RestMethod -Uri "http://localhost:5228/api/auth/register" -Method POST -Body $body -ContentType "application/json"
+$headers = @{ Authorization = "Bearer $($resp.token)" }
+
+# Create a car
+$car = '{"make":"Toyota","model":"Camry","year":2023,"mileage":18500,"color":"White","condition":"Excellent","description":"One owner, full service history.","askingPrice":28500}'
+Invoke-RestMethod -Uri "http://localhost:5228/api/cars" -Method POST -Body $car -ContentType "application/json" -Headers $headers
+```
 
 ## Key Commands
 
@@ -58,7 +79,7 @@ npm run dev         # http://localhost:5173 — proxies API calls to localhost:7
 | Client typecheck    | `cd src/CarDeal.Client && npx tsc --noEmit`     |
 | EF migration add    | `cd src/CarDeal.Api && dotnet ef migrations add <Name>` |
 | EF migration apply  | Automatic on startup (`db.Database.MigrateAsync()`)     |
-| Swagger docs        | `https://localhost:7001/swagger/index.html`      |
+| OpenAPI docs        | `http://localhost:5228/openapi/v1.json`           |
 
 ## Project Structure
 
