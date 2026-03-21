@@ -89,6 +89,15 @@ builder.Services.AddScoped<ICarService, CarService>();
 builder.Services.AddScoped<IOfferService, OfferService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 
+// Publishing services
+builder.Services.AddSingleton<IPublishingConnector>(new MockPublishingConnector("facebook"));
+builder.Services.AddSingleton<IPublishingConnector>(new MockPublishingConnector("craigslist"));
+builder.Services.AddSingleton<IPublishingConnector>(new MockPublishingConnector("carscom"));
+builder.Services.AddSingleton<IPublishingConnector>(new MockPublishingConnector("autotrader"));
+builder.Services.AddSingleton<IPublishingConnector>(new MockPublishingConnector("cargurus"));
+builder.Services.AddSingleton<IPublishingConnector>(new MockPublishingConnector("offerup"));
+builder.Services.AddScoped<IPublishingService, PublishingService>();
+
 // CORS
 builder.Services.AddCors(options =>
 {

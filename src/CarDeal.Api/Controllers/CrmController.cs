@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using CarDeal.Api.Data;
 using CarDeal.Api.DTOs;
 using CarDeal.Api.Models;
+using CarDeal.Api.Services;
 
 namespace CarDeal.Api.Controllers;
 
@@ -16,11 +17,13 @@ public class CrmController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly UserManager<User> _userManager;
+    private readonly IPublishingService _publishingService;
 
-    public CrmController(AppDbContext db, UserManager<User> userManager)
+    public CrmController(AppDbContext db, UserManager<User> userManager, IPublishingService publishingService)
     {
         _db = db;
         _userManager = userManager;
+        _publishingService = publishingService;
     }
 
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -485,6 +488,235 @@ public class CrmController : ControllerBase
         return Ok(new { message = $"Password reset for {admin.Email} to default.", email = admin.Email });
     }
 
+    // ─── Platforms & Connections ────────────────────────────────
+
+    [HttpGet("platforms")]
+    public async Task<ActionResult<List<ExternalPlatformResponse>>> GetPlatforms()
+    {
+        var platforms = await _db.ExternalPlatforms
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+
+        return Ok(platforms.Select(p => new ExternalPlatformResponse(
+            p.Id, p.Name, p.Slug, p.IconUrl, p.Description, p.IsActive
+        )).ToList());
+    }
+
+    [HttpGet("connections")]
+    [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    public async Task<ActionResult<List<PlatformConnectionResponse>>> GetConnections()
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue && !User.IsInRole("SuperAdmin"))
+            return Forbid();
+
+        var connections = await _db.PlatformConnections
+            .Include(c => c.Platform)
+            .Where(c => c.TenantId == tenantId)
+            .OrderBy(c => c.Platform.Name)
+            .ToListAsync();
+
+        return Ok(connections.Select(c => new PlatformConnectionResponse(
+            c.Id, c.TenantId, c.PlatformId, c.Platform.Name, c.Platform.Slug,
+            c.AccountId, c.IsEnabled, c.CreatedAt
+        )).ToList());
+    }
+
+    [HttpPost("connections")]
+    [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    public async Task<ActionResult<PlatformConnectionResponse>> CreateConnection(CreateConnectionRequest request)
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue && !User.IsInRole("SuperAdmin"))
+            return Forbid();
+
+        var platform = await _db.ExternalPlatforms.FindAsync(request.PlatformId);
+        if (platform == null)
+            return NotFound(new { message = "Platform not found." });
+
+        var existing = await _db.PlatformConnections
+            .AnyAsync(c => c.TenantId == tenantId && c.PlatformId == request.PlatformId);
+        if (existing)
+            return Conflict(new { message = "A connection to this platform already exists for your tenant." });
+
+        var connection = new PlatformConnection
+        {
+            TenantId = tenantId.Value,
+            PlatformId = request.PlatformId,
+            ApiKey = request.ApiKey,
+            ApiSecret = request.ApiSecret,
+            AccessToken = request.AccessToken,
+            AccountId = request.AccountId,
+            ConfigJson = request.ConfigJson
+        };
+
+        _db.PlatformConnections.Add(connection);
+        await _db.SaveChangesAsync();
+
+        return Created($"/api/crm/connections", new PlatformConnectionResponse(
+            connection.Id, connection.TenantId, connection.PlatformId,
+            platform.Name, platform.Slug, connection.AccountId,
+            connection.IsEnabled, connection.CreatedAt
+        ));
+    }
+
+    [HttpPut("connections/{id}")]
+    [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    public async Task<ActionResult<PlatformConnectionResponse>> UpdateConnection(int id, UpdateConnectionRequest request)
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue && !User.IsInRole("SuperAdmin"))
+            return Forbid();
+
+        var connection = await _db.PlatformConnections
+            .Include(c => c.Platform)
+            .FirstOrDefaultAsync(c => c.Id == id && c.TenantId == tenantId);
+
+        if (connection == null) return NotFound();
+
+        if (request.ApiKey != null) connection.ApiKey = request.ApiKey;
+        if (request.ApiSecret != null) connection.ApiSecret = request.ApiSecret;
+        if (request.AccessToken != null) connection.AccessToken = request.AccessToken;
+        if (request.AccountId != null) connection.AccountId = request.AccountId;
+        if (request.ConfigJson != null) connection.ConfigJson = request.ConfigJson;
+        if (request.IsEnabled.HasValue) connection.IsEnabled = request.IsEnabled.Value;
+        connection.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new PlatformConnectionResponse(
+            connection.Id, connection.TenantId, connection.PlatformId,
+            connection.Platform.Name, connection.Platform.Slug,
+            connection.AccountId, connection.IsEnabled, connection.CreatedAt
+        ));
+    }
+
+    [HttpDelete("connections/{id}")]
+    [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    public async Task<IActionResult> DeleteConnection(int id)
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue && !User.IsInRole("SuperAdmin"))
+            return Forbid();
+
+        var connection = await _db.PlatformConnections
+            .FirstOrDefaultAsync(c => c.Id == id && c.TenantId == tenantId);
+
+        if (connection == null) return NotFound();
+
+        _db.PlatformConnections.Remove(connection);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // ─── Publishing ──────────────────────────────────────────────
+
+    [HttpGet("inventory/{carId}/publications")]
+    public async Task<ActionResult<List<CarPublicationResponse>>> GetPublications(int carId)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == carId);
+        if (car == null) return NotFound();
+        if (!isSuperAdmin && car.TenantId != tenantId) return Forbid();
+
+        var publications = await _db.CarPublications
+            .Include(p => p.Connection).ThenInclude(c => c.Platform)
+            .Where(p => p.CarId == carId)
+            .OrderByDescending(p => p.UpdatedAt)
+            .ToListAsync();
+
+        return Ok(publications.Select(MapToPublicationResponse).ToList());
+    }
+
+    [HttpPost("inventory/{carId}/publish")]
+    public async Task<ActionResult<CarPublicationResponse>> PublishCar(int carId, PublishRequest request)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == carId);
+        if (car == null) return NotFound();
+        if (!isSuperAdmin && car.TenantId != tenantId) return Forbid();
+
+        var connection = await _db.PlatformConnections
+            .FirstOrDefaultAsync(c => c.Id == request.ConnectionId && c.TenantId == tenantId);
+        if (connection == null)
+            return NotFound(new { message = "Platform connection not found for your tenant." });
+
+        try
+        {
+            var publication = await _publishingService.PublishCarAsync(carId, request.ConnectionId);
+            await _db.Entry(publication).Reference(p => p.Connection).LoadAsync();
+            await _db.Entry(publication.Connection).Reference(c => c.Platform).LoadAsync();
+            return Ok(MapToPublicationResponse(publication));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("publications/{id}/update")]
+    public async Task<ActionResult<CarPublicationResponse>> UpdatePublication(int id)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var publication = await _db.CarPublications
+            .Include(p => p.Connection)
+            .Include(p => p.Car)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (publication == null) return NotFound();
+        if (!isSuperAdmin && publication.Connection.TenantId != tenantId) return Forbid();
+
+        try
+        {
+            var updated = await _publishingService.UpdatePublicationAsync(id);
+            await _db.Entry(updated).Reference(p => p.Connection).LoadAsync();
+            await _db.Entry(updated.Connection).Reference(c => c.Platform).LoadAsync();
+            return Ok(MapToPublicationResponse(updated));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("publications/{id}/unpublish")]
+    public async Task<ActionResult<CarPublicationResponse>> UnpublishCar(int id)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var publication = await _db.CarPublications
+            .Include(p => p.Connection)
+            .Include(p => p.Car)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (publication == null) return NotFound();
+        if (!isSuperAdmin && publication.Connection.TenantId != tenantId) return Forbid();
+
+        try
+        {
+            var updated = await _publishingService.UnpublishCarAsync(id);
+            await _db.Entry(updated).Reference(p => p.Connection).LoadAsync();
+            await _db.Entry(updated.Connection).Reference(c => c.Platform).LoadAsync();
+            return Ok(MapToPublicationResponse(updated));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // ─── Mapping Helpers ─────────────────────────────────────────
 
     private static CrmCarResponse MapToCrmCarResponse(Car c)
@@ -514,4 +746,10 @@ public class CrmController : ControllerBase
             f.Id, f.CarId, f.PurchasePrice, f.SalePrice,
             f.Notes, totalExpenses, profit);
     }
+
+    private static CarPublicationResponse MapToPublicationResponse(CarPublication p) => new(
+        p.Id, p.CarId, p.PlatformConnectionId,
+        p.Connection.Platform.Name, p.Connection.Platform.Slug,
+        p.Status.ToString(), p.ExternalListingId, p.ExternalUrl, p.ErrorMessage,
+        p.PublishedAt, p.UnpublishedAt);
 }

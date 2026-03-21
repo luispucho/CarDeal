@@ -31,6 +31,24 @@ function formatCurrency(value?: number) {
 
 const EXPENSE_TYPES = ['Repair', 'Marketing', 'Transport', 'Inspection', 'Other'];
 
+const PLATFORM_ICONS: Record<string, string> = {
+  facebook: '📘',
+  craigslist: '📋',
+  carscom: '🚗',
+  autotrader: '🏷️',
+  cargurus: '🦉',
+  offerup: '🎁',
+};
+
+const PUB_STATUS_COLORS: Record<string, string> = {
+  Published: 'bg-green-100 text-green-800',
+  Failed: 'bg-red-100 text-red-800',
+  Draft: 'bg-gray-100 text-gray-700',
+  Unpublished: 'bg-gray-100 text-gray-700',
+  Publishing: 'bg-yellow-100 text-yellow-800',
+  Unpublishing: 'bg-yellow-100 text-yellow-800',
+};
+
 export default function CrmCarDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -40,6 +58,7 @@ export default function CrmCarDetailPage() {
   const [expenseMsg, setExpenseMsg] = useState('');
   const [noteMsg, setNoteMsg] = useState('');
   const [noteContent, setNoteContent] = useState('');
+  const [pubMsg, setPubMsg] = useState('');
 
   // ── Queries ──
 
@@ -58,6 +77,17 @@ export default function CrmCarDetailPage() {
   const { data: notes } = useQuery({
     queryKey: ['crmNotes', carId],
     queryFn: () => crmApi.getNotes(carId),
+    enabled: !!carId,
+  });
+
+  const { data: connections } = useQuery({
+    queryKey: ['connections'],
+    queryFn: crmApi.getConnections,
+  });
+
+  const { data: publications } = useQuery({
+    queryKey: ['crmPublications', carId],
+    queryFn: () => crmApi.getPublications(carId),
     enabled: !!carId,
   });
 
@@ -121,6 +151,35 @@ export default function CrmCarDetailPage() {
       setNoteContent('');
       setNoteMsg(t('crm.noteAdded'));
       setTimeout(() => setNoteMsg(''), 3000);
+    },
+  });
+
+  // ── Publishing mutations ──
+
+  const publishMutation = useMutation({
+    mutationFn: (connectionId: number) => crmApi.publishCar(carId, connectionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crmPublications', carId] });
+      setPubMsg(t('crm.publishSuccess'));
+      setTimeout(() => setPubMsg(''), 3000);
+    },
+  });
+
+  const unpublishMutation = useMutation({
+    mutationFn: (pubId: number) => crmApi.unpublishCar(pubId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crmPublications', carId] });
+      setPubMsg(t('crm.unpublishSuccess'));
+      setTimeout(() => setPubMsg(''), 3000);
+    },
+  });
+
+  const updatePubMutation = useMutation({
+    mutationFn: (pubId: number) => crmApi.updatePublication(pubId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crmPublications', carId] });
+      setPubMsg(t('crm.updateSuccess'));
+      setTimeout(() => setPubMsg(''), 3000);
     },
   });
 
@@ -404,6 +463,107 @@ export default function CrmCarDetailPage() {
             {t('crm.addNote')}
           </button>
         </div>
+      </div>
+
+      {/* ── External Publishing ── */}
+      <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+        <h2 className="text-lg font-semibold mb-4">{t('crm.publishing')}</h2>
+        {pubMsg && <p className="text-green-600 text-sm mb-3">{pubMsg}</p>}
+
+        {connections && connections.length > 0 ? (
+          <div className="space-y-3">
+            {connections
+              .filter((conn: any) => conn.isEnabled)
+              .map((conn: any) => {
+                const pub = publications?.find(
+                  (p: any) => p.platformConnectionId === conn.id
+                );
+                const icon = PLATFORM_ICONS[conn.platformSlug] ?? '🌐';
+                const status = pub?.status;
+                const statusColor = PUB_STATUS_COLORS[status ?? ''] ?? 'bg-gray-100 text-gray-700';
+
+                return (
+                  <div
+                    key={conn.id}
+                    className="flex flex-wrap items-center gap-3 border rounded-lg px-4 py-3"
+                  >
+                    <span className="text-lg">{icon}</span>
+                    <span className="font-medium text-sm flex-1">{conn.platformName}</span>
+
+                    {status && (
+                      <span className={`text-xs px-2 py-1 rounded-full ${statusColor}`}>
+                        {status === 'Published' && t('crm.published')}
+                        {status === 'Failed' && t('crm.publishFailed')}
+                        {status === 'Unpublished' && t('crm.unpublished')}
+                        {status === 'Draft' && 'Draft'}
+                        {status === 'Publishing' && t('crm.publishingInProgress')}
+                        {status === 'Unpublishing' && t('crm.unpublish') + '...'}
+                      </span>
+                    )}
+
+                    {status === 'Published' && pub?.externalUrl && (
+                      <a
+                        href={pub.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        {t('crm.viewListing')} ↗
+                      </a>
+                    )}
+
+                    <div className="flex gap-2">
+                      {status === 'Published' && (
+                        <>
+                          <button
+                            onClick={() => updatePubMutation.mutate(pub!.id)}
+                            disabled={updatePubMutation.isPending}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition disabled:opacity-50"
+                          >
+                            {t('crm.updateListing')}
+                          </button>
+                          <button
+                            onClick={() => unpublishMutation.mutate(pub!.id)}
+                            disabled={unpublishMutation.isPending}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 transition disabled:opacity-50"
+                          >
+                            {t('crm.unpublish')}
+                          </button>
+                        </>
+                      )}
+
+                      {status === 'Failed' && (
+                        <>
+                          {pub?.errorMessage && (
+                            <span className="text-xs text-red-600">{pub.errorMessage}</span>
+                          )}
+                          <button
+                            onClick={() => publishMutation.mutate(conn.id)}
+                            disabled={publishMutation.isPending}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition disabled:opacity-50"
+                          >
+                            {t('crm.retryPublish')}
+                          </button>
+                        </>
+                      )}
+
+                      {(!status || status === 'Unpublished' || status === 'Draft') && (
+                        <button
+                          onClick={() => publishMutation.mutate(conn.id)}
+                          disabled={publishMutation.isPending}
+                          className="text-xs px-3 py-1.5 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition disabled:opacity-50"
+                        >
+                          {t('crm.publish')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm">{t('crm.noConnections')}</p>
+        )}
       </div>
     </div>
   );
