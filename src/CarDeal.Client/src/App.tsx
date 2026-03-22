@@ -7,6 +7,7 @@ import SaasLandingPage from './pages/SaasLandingPage';
 import TenantLandingPage from './pages/TenantLandingPage';
 import LoginPage from './pages/LoginPage';
 import ConsignmentInquiryPage from './pages/ConsignmentInquiryPage';
+import CarInquiryPage from './pages/CarInquiryPage';
 import MyCarsPage from './pages/MyCarsPage';
 import SubmitCarPage from './pages/SubmitCarPage';
 import CarDetailPage from './pages/CarDetailPage';
@@ -123,6 +124,7 @@ export default function App() {
               {/* Tenant-scoped routes (catch-all — must come after specific routes) */}
               <Route path="/:tenantIdOrSlug" element={<TenantLandingPage />} />
               <Route path="/:tenantIdOrSlug/sell" element={<ConsignmentInquiryPage />} />
+              <Route path="/:tenantIdOrSlug/inquiry/:carId" element={<CarInquiryPage />} />
               <Route path="/:tenantIdOrSlug/inventory" element={<InventoryPage />} />
               <Route path="/:tenantIdOrSlug/inventory/:id" element={<PublicCarDetailPage />} />
 

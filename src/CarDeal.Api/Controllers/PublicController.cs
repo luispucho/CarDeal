@@ -159,36 +159,55 @@ public class PublicController : ControllerBase
     }
 
     [HttpGet("vin/{vin}")]
-    public async Task<ActionResult<VinDecodeResponse>> DecodeVin(string vin)
+    public async Task<ActionResult> DecodeVin(string vin)
     {
-        using var httpClient = new HttpClient();
-        var content = new FormUrlEncodedContent(new[] {
-            new KeyValuePair<string, string>("format", "json"),
-            new KeyValuePair<string, string>("data", vin)
-        });
-        var response = await httpClient.PostAsync(
-            "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVINValuesBatch/", content);
-        var json = await response.Content.ReadAsStringAsync();
+        try
+        {
+            using var httpClient = new HttpClient();
+            var content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("format", "json"),
+                new KeyValuePair<string, string>("data", vin)
+            });
+            var response = await httpClient.PostAsync(
+                "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVINValuesBatch/", content);
+            var json = await response.Content.ReadAsStringAsync();
 
-        var doc = System.Text.Json.JsonDocument.Parse(json);
-        var results = doc.RootElement.GetProperty("Results");
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            var results = doc.RootElement.GetProperty("Results");
 
-        string? getValue(string variable) {
-            foreach (var item in results.EnumerateArray()) {
-                if (item.GetProperty("Variable").GetString() == variable) {
-                    var val = item.GetProperty("Value").GetString();
-                    return string.IsNullOrWhiteSpace(val) ? null : val;
+            if (results.GetArrayLength() == 0)
+                return Ok(new { error = "No results found" });
+
+            var result = results[0];
+
+            string? getProp(string name) {
+                if (result.TryGetProperty(name, out var val)) {
+                    var s = val.GetString();
+                    return string.IsNullOrWhiteSpace(s) ? null : s;
                 }
+                return null;
             }
-            return null;
-        }
 
-        return Ok(new VinDecodeResponse(
-            getValue("Make"), getValue("Model"), getValue("Model Year"),
-            getValue("Body Class"), getValue("Drive Type"), getValue("Fuel Type - Primary"),
-            getValue("Engine Number of Cylinders"), getValue("Displacement (L)"),
-            getValue("Transmission Style"), getValue("Plant Country")
-        ));
+            return Ok(new {
+                make = getProp("Make"),
+                model = getProp("Model"),
+                modelYear = getProp("ModelYear"),
+                bodyClass = getProp("BodyClass"),
+                driveType = getProp("DriveType"),
+                fuelTypePrimary = getProp("FuelTypePrimary"),
+                engineCylinders = getProp("EngineCylinders"),
+                displacementL = getProp("DisplacementL"),
+                transmissionStyle = getProp("TransmissionStyle"),
+                plantCountry = getProp("PlantCountry"),
+                errorCode = getProp("ErrorCode"),
+                errorText = getProp("ErrorText"),
+            });
+        }
+        catch (Exception ex)
+        {
+            return Ok(new { error = ex.Message });
+        }
     }
 
     [HttpPost("consignment-inquiry")]
@@ -198,7 +217,8 @@ public class PublicController : ControllerBase
         var tenant = await _db.Tenants.FindAsync(tenantId);
         if (tenant == null || !tenant.IsActive) return NotFound();
 
-        VinDecodeResponse? vinData = null;
+        string? make = null, model = null;
+        int? year = null;
         try {
             using var httpClient = new HttpClient();
             var content = new FormUrlEncodedContent(new[] {
@@ -212,22 +232,20 @@ public class PublicController : ControllerBase
             var doc = System.Text.Json.JsonDocument.Parse(json);
             var results = doc.RootElement.GetProperty("Results");
 
-            string? getValue(string variable) {
-                foreach (var item in results.EnumerateArray()) {
-                    if (item.GetProperty("Variable").GetString() == variable) {
-                        var val = item.GetProperty("Value").GetString();
-                        return string.IsNullOrWhiteSpace(val) ? null : val;
+            if (results.GetArrayLength() > 0)
+            {
+                var result = results[0];
+                string? getProp(string name) {
+                    if (result.TryGetProperty(name, out var val)) {
+                        var s = val.GetString();
+                        return string.IsNullOrWhiteSpace(s) ? null : s;
                     }
+                    return null;
                 }
-                return null;
+                make = getProp("Make");
+                model = getProp("Model");
+                year = int.TryParse(getProp("ModelYear"), out var y) ? y : null;
             }
-
-            vinData = new VinDecodeResponse(
-                getValue("Make"), getValue("Model"), getValue("Model Year"),
-                getValue("Body Class"), getValue("Drive Type"), getValue("Fuel Type - Primary"),
-                getValue("Engine Number of Cylinders"), getValue("Displacement (L)"),
-                getValue("Transmission Style"), getValue("Plant Country")
-            );
         } catch { /* ignore VIN decode errors */ }
 
         var inquiry = new ConsignmentInquiry {
@@ -236,9 +254,9 @@ public class PublicController : ControllerBase
             Email = request.Email,
             Phone = request.Phone,
             VIN = request.VIN,
-            Make = vinData?.Make,
-            Model = vinData?.Model,
-            Year = int.TryParse(vinData?.ModelYear, out var y) ? y : null,
+            Make = make,
+            Model = model,
+            Year = year,
         };
         _db.ConsignmentInquiries.Add(inquiry);
         await _db.SaveChangesAsync();
@@ -247,6 +265,34 @@ public class PublicController : ControllerBase
             inquiry.Id, inquiry.TenantId, inquiry.FullName, inquiry.Email, inquiry.Phone,
             inquiry.VIN, inquiry.Make, inquiry.Model, inquiry.Year,
             inquiry.Status, inquiry.CarId, inquiry.CreatedAt
+        ));
+    }
+
+    [HttpPost("car-inquiry")]
+    public async Task<ActionResult> SubmitCarInquiry(CreateCarInquiryRequest request)
+    {
+        var car = await _db.Cars
+            .Include(c => c.Tenant)
+            .FirstOrDefaultAsync(c => c.Id == request.CarId);
+        if (car == null) return NotFound();
+
+        var inquiry = new CarInquiry
+        {
+            CarId = request.CarId,
+            TenantId = car.TenantId,
+            FullName = request.FullName,
+            Email = request.Email,
+            Phone = request.Phone,
+            Message = request.Message,
+        };
+        _db.CarInquiries.Add(inquiry);
+        await _db.SaveChangesAsync();
+
+        return Ok(new CarInquiryResponse(
+            inquiry.Id, inquiry.CarId,
+            $"{car.Year} {car.Make} {car.Model}",
+            inquiry.FullName, inquiry.Email, inquiry.Phone,
+            inquiry.Message, inquiry.Status, inquiry.CreatedAt
         ));
     }
 

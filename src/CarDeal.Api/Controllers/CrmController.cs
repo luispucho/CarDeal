@@ -1072,6 +1072,53 @@ public class CrmController : ControllerBase
         ));
     }
 
+    // ─── Car Inquiries ──────────────────────────────────────────
+
+    [HttpGet("car-inquiries")]
+    public async Task<ActionResult<List<CarInquiryResponse>>> GetCarInquiries()
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var query = _db.CarInquiries.Include(ci => ci.Car).AsQueryable();
+        if (!isSuperAdmin)
+            query = query.Where(ci => ci.TenantId == tenantId);
+
+        var inquiries = await query.OrderByDescending(ci => ci.CreatedAt).ToListAsync();
+        return Ok(inquiries.Select(ci => new CarInquiryResponse(
+            ci.Id, ci.CarId,
+            $"{ci.Car.Year} {ci.Car.Make} {ci.Car.Model}",
+            ci.FullName, ci.Email, ci.Phone,
+            ci.Message, ci.Status, ci.CreatedAt
+        )).ToList());
+    }
+
+    [HttpPut("car-inquiries/{id}/status")]
+    public async Task<ActionResult<CarInquiryResponse>> UpdateCarInquiryStatus(int id, [FromBody] UpdateCarInquiryStatusRequest request)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var inquiry = await _db.CarInquiries.Include(ci => ci.Car).FirstOrDefaultAsync(ci => ci.Id == id);
+        if (inquiry == null) return NotFound();
+        if (!isSuperAdmin && inquiry.TenantId != tenantId) return Forbid();
+
+        if (request.Status != "Contacted" && request.Status != "Closed")
+            return BadRequest("Status must be 'Contacted' or 'Closed'");
+
+        inquiry.Status = request.Status;
+        await _db.SaveChangesAsync();
+
+        return Ok(new CarInquiryResponse(
+            inquiry.Id, inquiry.CarId,
+            $"{inquiry.Car.Year} {inquiry.Car.Make} {inquiry.Car.Model}",
+            inquiry.FullName, inquiry.Email, inquiry.Phone,
+            inquiry.Message, inquiry.Status, inquiry.CreatedAt
+        ));
+    }
+
     // ─── Mapping Helpers ─────────────────────────────────────────
 
     private static CrmCarResponse MapToCrmCarResponse(Car c)

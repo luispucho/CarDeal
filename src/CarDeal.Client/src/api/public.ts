@@ -82,4 +82,6 @@ export const publicApi = {
     apiClient.get<VinDecodeData>(`/public/vin/${vin}`).then(r => r.data),
   submitInquiry: (tenantId: number, data: { fullName: string; email: string; phone: string; vin: string }) =>
     apiClient.post<InquiryResponseData>(`/public/consignment-inquiry?tenantId=${tenantId}`, data).then(r => r.data),
+  submitCarInquiry: (data: { carId: number; fullName: string; email: string; phone: string; message?: string }) =>
+    apiClient.post('/public/car-inquiry', data).then(r => r.data),
 };
