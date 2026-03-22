@@ -3,12 +3,14 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { publicApi } from '../api/public';
+import { useAuth } from '../context/AuthContext';
 import ListingRibbon from '../components/common/ListingRibbon';
 import { getCurrentTenant, setCurrentTenant } from '../utils/tenantCookie';
 
 export default function PublicCarDetailPage() {
   const { t } = useTranslation();
   const { id, tenantIdOrSlug } = useParams<{ id: string; tenantIdOrSlug?: string }>();
+  const { user, isAuthenticated } = useAuth();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Resolve tenant from URL or cookie
@@ -52,12 +54,20 @@ export default function PublicCarDetailPage() {
   if (!car) return <div className="text-center py-12 text-red-500">{t('cars.carNotFound')}</div>;
 
   const primaryImage = car.images.find(i => i.isPrimary) ?? car.images[0];
+  const canManage = isAuthenticated && !!user?.tenantId && car.tenantId === user.tenantId;
 
   return (
     <div className="max-w-5xl mx-auto">
-      <Link to={backLink} className="text-blue-600 hover:underline text-sm mb-4 inline-block">
-        ← {t('inventory.title')}
-      </Link>
+      <div className="flex justify-between items-center mb-4">
+        <Link to={backLink} className="text-blue-600 hover:underline text-sm">
+          ← {t('inventory.title')}
+        </Link>
+        {canManage && (
+          <Link to={`/cars/${car.id}`} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+            ✏️ {t('cars.edit')}
+          </Link>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Image Section */}
