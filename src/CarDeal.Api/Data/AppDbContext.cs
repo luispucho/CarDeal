@@ -25,6 +25,7 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<Investor> Investors => Set<Investor>();
     public DbSet<InvestorContribution> InvestorContributions => Set<InvestorContribution>();
     public DbSet<CarFunding> CarFundings => Set<CarFunding>();
+    public DbSet<ConsignmentInquiry> ConsignmentInquiries => Set<ConsignmentInquiry>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -168,6 +169,14 @@ public class AppDbContext : IdentityDbContext<User>
             e.HasIndex(cf => cf.CarId);
             e.HasIndex(cf => cf.InvestorId);
             e.Property(cf => cf.Amount).HasColumnType("decimal(18,2)");
+        });
+
+        builder.Entity<ConsignmentInquiry>(e =>
+        {
+            e.HasOne(ci => ci.Tenant).WithMany().HasForeignKey(ci => ci.TenantId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(ci => ci.Car).WithMany().HasForeignKey(ci => ci.CarId).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(ci => ci.TenantId);
+            e.HasIndex(ci => ci.Status);
         });
     }
 }

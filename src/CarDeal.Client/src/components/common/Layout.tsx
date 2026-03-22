@@ -125,17 +125,9 @@ export default function Layout() {
                   </button>
                 </>
               ) : (
-                <>
-                  <Link to="/login" className="text-gray-700 hover:text-blue-600 transition">
-                    {t('common.login')}
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
-                  >
-                    {t('common.register')}
-                  </Link>
-                </>
+                <Link to="/login" className="text-gray-700 hover:text-blue-600 transition">
+                  {t('common.login')}
+                </Link>
               )}
             </div>
           </div>

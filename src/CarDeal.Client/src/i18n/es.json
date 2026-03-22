@@ -91,7 +91,8 @@
     "nameMinLength": "El nombre debe tener al menos 2 caracteres",
     "passwordsNoMatch": "Las contraseñas no coinciden",
     "loginFailed": "Error al iniciar sesión",
-    "registerFailed": "Error al registrarse"
+    "registerFailed": "Error al registrarse",
+    "dealerManaged": "Las cuentas son administradas por tu concesionario. Contacta a tu dealer para acceso."
   },
   "cars": {
     "myCars": "Mis Autos",
@@ -584,5 +585,30 @@
     "readyToGrow": "¿Listo para Hacer Crecer Tu Concesionario?",
     "readySubtitle": "Únete a cientos de dealers que ya usan CarDeal",
     "carsAvailable": "autos disponibles"
+  },
+  "consignment": {
+    "sellYourCar": "Vende Tu Auto",
+    "sellSubtitle": "Obtén una oferta justa por tu vehículo en minutos",
+    "step1Title": "Tu Información",
+    "fullName": "Nombre Completo",
+    "email": "Correo Electrónico",
+    "phone": "Teléfono",
+    "vinNumber": "Número VIN",
+    "vinHelp": "Número de Identificación del Vehículo de 17 caracteres (en el tablero o puerta del conductor)",
+    "next": "Siguiente",
+    "step2Title": "Confirma Tu Vehículo",
+    "vinDecoded": "Encontramos tu vehículo:",
+    "vinFailed": "No pudimos decodificar tu VIN, pero aún puedes enviar tu consulta",
+    "bodyClass": "Tipo de Carrocería",
+    "driveType": "Tracción",
+    "fuelType": "Tipo de Combustible",
+    "engine": "Motor",
+    "transmission": "Transmisión",
+    "looksCorrect": "Esto es correcto — Enviar",
+    "goBack": "Volver",
+    "step3Title": "¡Gracias!",
+    "submitted": "Tu consulta de consignación ha sido enviada a",
+    "willContact": "Un representante te contactará pronto al",
+    "or": "o"
   }
 }

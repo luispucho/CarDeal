@@ -71,6 +71,12 @@ export default function TenantLandingPage() {
           >
             {t('home.viewInventory')}
           </Link>
+          <Link
+            to={`/${slug}/sell`}
+            className="inline-flex items-center justify-center border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg hover:bg-white/10 hover:-translate-y-0.5 transition-all duration-200 ml-4"
+          >
+            {t('consignment.sellYourCar')}
+          </Link>
         </div>
       </section>
 

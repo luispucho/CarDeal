@@ -6,7 +6,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import SaasLandingPage from './pages/SaasLandingPage';
 import TenantLandingPage from './pages/TenantLandingPage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import ConsignmentInquiryPage from './pages/ConsignmentInquiryPage';
 import MyCarsPage from './pages/MyCarsPage';
 import SubmitCarPage from './pages/SubmitCarPage';
 import CarDetailPage from './pages/CarDetailPage';
@@ -48,7 +48,6 @@ export default function App() {
 
               {/* Non-tenant routes (must come before /:tenantIdOrSlug catch-all) */}
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/inventory/:id" element={<PublicCarDetailPage />} />
               <Route path="/compare" element={<ComparePage />} />
@@ -123,6 +122,7 @@ export default function App() {
 
               {/* Tenant-scoped routes (catch-all — must come after specific routes) */}
               <Route path="/:tenantIdOrSlug" element={<TenantLandingPage />} />
+              <Route path="/:tenantIdOrSlug/sell" element={<ConsignmentInquiryPage />} />
               <Route path="/:tenantIdOrSlug/inventory" element={<InventoryPage />} />
               <Route path="/:tenantIdOrSlug/inventory/:id" element={<PublicCarDetailPage />} />
 
