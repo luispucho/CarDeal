@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { publicApi } from '../api/public';
+import { clearCurrentTenant } from '../utils/tenantCookie';
 
 const FEATURES = [
   { icon: '🏪', key: 'multiDealer' },
@@ -18,6 +20,11 @@ const ENTERPRISE_FEATURES = ['customDomain', 'prioritySupport', 'dedicatedAnalyt
 
 export default function SaasLandingPage() {
   const { t } = useTranslation();
+
+  // Clear tenant cookie when visiting the SaaS landing page
+  useEffect(() => {
+    clearCurrentTenant();
+  }, []);
 
   const { data: tenants } = useQuery({
     queryKey: ['publicTenants'],

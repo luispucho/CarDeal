@@ -70,12 +70,16 @@ export default function Layout() {
                 )}
                 {tenantBranding?.tenantName || t('nav.brand')}
               </Link>
-              <Link to={inventoryLink} className="text-gray-700 hover:text-blue-600 transition">
-                {t('nav.buyCar')}
-              </Link>
-              <Link to={sellLink} className="text-gray-700 hover:text-blue-600 transition">
-                {t('nav.sellCar')}
-              </Link>
+              {cookieTenant && (
+                <Link to={inventoryLink} className="text-gray-700 hover:text-blue-600 transition">
+                  {isTenantUser ? t('nav.inventory') : t('nav.buyCar')}
+                </Link>
+              )}
+              {cookieTenant && !isTenantUser && (
+                <Link to={sellLink} className="text-gray-700 hover:text-blue-600 transition">
+                  {t('nav.sellCar')}
+                </Link>
+              )}
               {isAuthenticated && (
                 <>
                   {!isTenantUser && !isSuperAdmin && (
