@@ -353,7 +353,15 @@
     "allTiers": "Todos los Niveles",
     "allStatuses": "Todos los Estados",
     "slugRequired": "El identificador (slug) es requerido",
-    "slugTaken": "Este identificador ya está en uso. Por favor elija uno diferente."
+    "slugTaken": "Este identificador ya está en uso. Por favor elija uno diferente.",
+    "adminEmail": "Email del Admin",
+    "adminAccount": "Cuenta de Admin",
+    "resetPassword": "Restablecer Contraseña",
+    "sendCredentials": "Enviar Credenciales",
+    "newPasswordGenerated": "Nueva contraseña generada:",
+    "savePasswordWarning": "¡Guarda esta contraseña! No se mostrará de nuevo.",
+    "credentialsSent": "¡Email de credenciales enviado!",
+    "passwordReset": "¡Contraseña restablecida!"
   },
   "tierGate": {
     "title": "¡Ups! A este auto le falta una llanta",

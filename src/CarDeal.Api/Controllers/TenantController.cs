@@ -63,6 +63,37 @@ public class TenantController : ControllerBase
         _db.TenantBrandings.Add(branding);
         await _db.SaveChangesAsync();
 
+        // Auto-create admin account from contactEmail
+        var adminEmail = request.ContactEmail;
+        if (!string.IsNullOrEmpty(adminEmail))
+        {
+            var existingUser = await _userManager.FindByEmailAsync(adminEmail);
+            if (existingUser == null)
+            {
+                var adminUser = new User
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    FullName = tenant.Name + " Admin",
+                    EmailConfirmed = true,
+                    TenantId = tenant.Id
+                };
+                var password = GenerateRandomPassword();
+                var result = await _userManager.CreateAsync(adminUser, password);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(adminUser, "Admin");
+                }
+            }
+            else
+            {
+                existingUser.TenantId = tenant.Id;
+                await _userManager.UpdateAsync(existingUser);
+                if (!await _userManager.IsInRoleAsync(existingUser, "Admin"))
+                    await _userManager.AddToRoleAsync(existingUser, "Admin");
+            }
+        }
+
         return CreatedAtAction(nameof(Get), new { id = tenant.Id }, MapToResponse(tenant));
     }
 
@@ -224,6 +255,42 @@ public class TenantController : ControllerBase
         tenant.Tier = tier;
         await _db.SaveChangesAsync();
         return Ok(MapToResponse(tenant));
+    }
+
+    [HttpPost("{id}/reset-password")]
+    public async Task<IActionResult> ResetAdminPassword(int id)
+    {
+        var tenant = await _db.Tenants.FindAsync(id);
+        if (tenant == null) return NotFound();
+
+        var admin = await _userManager.FindByEmailAsync(tenant.ContactEmail ?? "");
+        if (admin == null) return NotFound(new { error = "No admin account found for this tenant" });
+
+        var newPassword = GenerateRandomPassword();
+        var token = await _userManager.GeneratePasswordResetTokenAsync(admin);
+        var result = await _userManager.ResetPasswordAsync(admin, token, newPassword);
+        if (!result.Succeeded)
+            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+
+        return Ok(new { email = admin.Email, newPassword = newPassword, message = "Password has been reset" });
+    }
+
+    [HttpPost("{id}/send-credentials")]
+    public async Task<IActionResult> SendCredentials(int id)
+    {
+        var tenant = await _db.Tenants.FindAsync(id);
+        if (tenant == null) return NotFound();
+
+        // In production: send email via SMTP/SendGrid
+        return Ok(new { email = tenant.ContactEmail, message = "Credentials email sent (mock)" });
+    }
+
+    private static string GenerateRandomPassword()
+    {
+        var random = new Random();
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        var password = new string(Enumerable.Range(0, 10).Select(_ => chars[random.Next(chars.Length)]).ToArray());
+        return password + "A1!";
     }
 
     private static TenantResponse MapToResponse(Tenant t) => new(

@@ -14,8 +14,8 @@ export default function TenantsPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [managingAdminId, setManagingAdminId] = useState<number | null>(null);
-  const [newAdminInput, setNewAdminInput] = useState('');
+  const [showingAdminId, setShowingAdminId] = useState<number | null>(null);
+  const [newPasswordInfo, setNewPasswordInfo] = useState<{ tenantId: number; password: string } | null>(null);
 
   // Filters
   const [searchName, setSearchName] = useState('');
@@ -32,13 +32,7 @@ export default function TenantsPage() {
     queryFn: tenantApi.list,
   });
 
-  const { data: tenantUsers } = useQuery({
-    queryKey: ['tenantUsers', managingAdminId],
-    queryFn: () => tenantApi.getUsers(managingAdminId!),
-    enabled: managingAdminId != null,
-  });
-
-  const createMutation = useMutation({
+  const createMutation= useMutation({
     mutationFn: tenantApi.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
@@ -83,28 +77,27 @@ export default function TenantsPage() {
     },
   });
 
-  const assignUserMutation = useMutation({
-    mutationFn: ({ tenantId, userId }: { tenantId: number; userId: string }) =>
-      tenantApi.assignUser(tenantId, userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenantUsers', managingAdminId] });
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      setNewAdminInput('');
-      alert(t('tenants.userAssigned'));
+  const resetPwdMutation = useMutation({
+    mutationFn: tenantApi.resetPassword,
+    onSuccess: (data, tenantId) => {
+      setNewPasswordInfo({ tenantId, password: data.newPassword });
     },
   });
 
-  const removeUserMutation = useMutation({
-    mutationFn: ({ tenantId, userId }: { tenantId: number; userId: string }) =>
-      tenantApi.removeUser(tenantId, userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenantUsers', managingAdminId] });
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      alert(t('tenants.userRemoved'));
-    },
+  const sendCredsMutation = useMutation({
+    mutationFn: tenantApi.sendCredentials,
+    onSuccess: () => alert(t('tenants.credentialsSent')),
   });
 
-  const resetForm = () => {
+  const handleResetPassword = (tenantId: number) => {
+    resetPwdMutation.mutate(tenantId);
+  };
+
+  const handleSendCredentials = (tenantId: number) => {
+    sendCredsMutation.mutate(tenantId);
+  };
+
+  const resetForm= () => {
     setFormName('');
     setFormSlug('');
     setFormEmail('');
@@ -162,9 +155,6 @@ export default function TenantsPage() {
   };
 
   if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
-
-  // Filter admins from tenantUsers (users who were explicitly assigned)
-  const adminUsers = tenantUsers ?? [];
 
   return (
     <div>
@@ -345,46 +335,35 @@ export default function TenantsPage() {
               </div>
 
               <button
-                onClick={() => setManagingAdminId(managingAdminId === tenant.id ? null : tenant.id)}
+                onClick={() => setShowingAdminId(showingAdminId === tenant.id ? null : tenant.id)}
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
               >
-                {t('tenants.manageAdmins')} {managingAdminId === tenant.id ? '▲' : '▼'}
+                {t('tenants.adminAccount')} {showingAdminId === tenant.id ? '▲' : '▼'}
               </button>
 
-              {/* Manage Admins Section */}
-              {managingAdminId === tenant.id && (
+              {/* Admin Account Section */}
+              {showingAdminId === tenant.id && (
                 <div className="mt-4 border-t pt-4">
-                  <p className="text-xs text-gray-500 mb-3">{t('tenants.manageAdminsDesc')}</p>
-                  <div className="flex gap-2 mb-3">
-                    <input type="text" value={newAdminInput} onChange={e => setNewAdminInput(e.target.value)}
-                      placeholder={t('tenants.userIdPlaceholder')}
-                      className="flex-1 border rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                    <button
-                      onClick={() => { if (newAdminInput.trim()) assignUserMutation.mutate({ tenantId: tenant.id, userId: newAdminInput.trim() }); }}
-                      disabled={assignUserMutation.isPending}
-                      className="bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50">
-                      {t('tenants.assignUser')}
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 mb-1">{t('tenants.adminEmail')}</p>
+                    <p className="text-sm font-medium">{tenant.contactEmail}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleResetPassword(tenant.id)} disabled={resetPwdMutation.isPending}
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition disabled:opacity-50">
+                      🔑 {t('tenants.resetPassword')}
+                    </button>
+                    <button onClick={() => handleSendCredentials(tenant.id)} disabled={sendCredsMutation.isPending}
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition disabled:opacity-50">
+                      📧 {t('tenants.sendCredentials')}
                     </button>
                   </div>
-
-                  {adminUsers.length > 0 ? (
-                    <ul className="space-y-2">
-                      {adminUsers.map((u: any) => (
-                        <li key={u.id} className="flex justify-between items-center bg-gray-50 rounded-lg px-3 py-2 text-sm">
-                          <div>
-                            <span className="font-medium">{u.fullName ?? u.email ?? u.id}</span>
-                            <span className="text-xs text-gray-400 ml-2">{u.role}</span>
-                          </div>
-                          <button
-                            onClick={() => { if (window.confirm(t('tenants.confirmRemoveAdmin'))) removeUserMutation.mutate({ tenantId: tenant.id, userId: u.id }); }}
-                            className="text-red-500 hover:text-red-700 text-xs">
-                            ✕
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-gray-400">{t('tenants.noAdmins')}</p>
+                  {newPasswordInfo && newPasswordInfo.tenantId === tenant.id && (
+                    <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <p className="text-xs text-yellow-800 font-medium mb-1">{t('tenants.newPasswordGenerated')}</p>
+                      <p className="text-sm font-mono bg-white px-2 py-1 rounded border">{newPasswordInfo.password}</p>
+                      <p className="text-xs text-yellow-600 mt-1">{t('tenants.savePasswordWarning')}</p>
+                    </div>
                   )}
                 </div>
               )}

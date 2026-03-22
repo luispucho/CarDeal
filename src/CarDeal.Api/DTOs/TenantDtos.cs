@@ -6,3 +6,4 @@ public record TenantResponse(int Id, string Name, string Slug, string? LogoUrl, 
 public record CreateTenantRequest([Required] string Name, [Required] string Slug, string? ContactEmail);
 public record UpdateTenantRequest(string? Name, string? Slug, string? ContactEmail);
 public record AssignUserRequest([Required] string UserId);
+public record ResetPasswordResponse(string Email, string NewPassword, string Message);
