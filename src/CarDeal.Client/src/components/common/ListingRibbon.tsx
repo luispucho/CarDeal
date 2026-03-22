@@ -30,8 +30,7 @@ export default function ListingRibbon({ listingType, tenantId, viewerTenantId }:
   if (!style) return null;
 
   return (
-    <div className={`absolute top-3 -left-2 ${style.bg} ${style.text} text-xs font-bold px-3 py-1 shadow-md z-10`}
-         style={{ clipPath: 'polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%)' }}>
+    <div className={`absolute top-3 right-3 ${style.bg} ${style.text} text-xs font-bold px-3 py-1 rounded-full shadow-sm z-10`}>
       {t(`listingType.${effectiveType}`)}
     </div>
   );
