@@ -220,17 +220,19 @@ export default function ProfilePage() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-xl shadow-sm p-6 mt-6 border border-red-200">
-        <h2 className="text-lg font-semibold text-red-600 mb-2">{t('profile.dangerZone')}</h2>
-        <p className="text-sm text-gray-600 mb-4">{t('profile.deleteWarning')}</p>
-        <button
-          onClick={handleDeleteAccount}
-          disabled={deleting}
-          className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition text-sm font-semibold"
-        >
-          {deleting ? t('common.loading') : t('profile.deleteAccount')}
-        </button>
-      </div>
+      {!user?.tenantId && (
+        <div className="bg-white rounded-xl shadow-sm p-6 mt-6 border border-red-200">
+          <h2 className="text-lg font-semibold text-red-600 mb-2">{t('profile.dangerZone')}</h2>
+          <p className="text-sm text-gray-600 mb-4">{t('profile.deleteWarning')}</p>
+          <button
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition text-sm font-semibold"
+          >
+            {deleting ? t('common.loading') : t('profile.deleteAccount')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

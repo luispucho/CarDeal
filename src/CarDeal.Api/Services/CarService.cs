@@ -44,6 +44,10 @@ public class CarService : ICarService
             Description = request.Description,
             AskingPrice = request.AskingPrice
         };
+        var userEntity = await _db.Users.FindAsync(userId);
+        if (userEntity?.TenantId != null)
+            car.TenantId = userEntity.TenantId;
+
         _db.Cars.Add(car);
         await _db.SaveChangesAsync();
         return await GetByIdAsync(car.Id) ?? throw new InvalidOperationException("Failed to create car");
