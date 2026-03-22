@@ -97,52 +97,59 @@ Employee passwords are the same as their tenant admin. Each tenant has 10 pre-lo
 
 ## Features
 
-### 🏪 Public Marketplace
-- 🔍 **Car Inventory** — Sidebar filters (make, year range, price range, listing type, sort), car comparison
-- 🔄 **Car Comparison** — Select up to 4 cars to compare side-by-side with difference highlighting
-- 🏷️ **Listing Ribbons** — Color-coded badges: Consigned (gray), Inventory (blue), Certified (gold), Trusted Partner (silver)
-- ⭐ **Featured Cars** — Admin-promoted vehicles showcased on the homepage
-- 🚗 **Car Detail Pages** — Full image carousel with lightbox, keyboard navigation, and thumbnails
+### 🏠 SaaS Platform
+- 🌐 **SaaS Landing Page** (`/0`) — Sells the platform to dealers with features, pricing tiers, demo dealers
+- 🏪 **Tenant-Specific Sites** (`/{dealer-slug}`) — Each dealer gets their own branded landing page
+- 🍪 **Cookie-Based Context** — Browsing a dealer stores context for seamless navigation
 
-### 👤 User Features
-- 🚘 **Car Submission** — Add vehicles with make, model, year, mileage, condition, VIN, photos, and asking price
-- ✏️ **Edit Listings** — Inline editing for pending cars
-- 📷 **Image Management** — Upload up to 10 photos (5MB each), styled upload buttons, delete with confirmation
-- 👤 **Profile Management** — Edit name, phone, upload profile picture
-- 🗑️ **Account Deletion** — Delete account with double confirmation (active cars marked as Withdrawn)
-- 💬 **Messaging** — In-app communication between sellers and admins
+### 🏪 Public Marketplace
+- 🔍 **Car Inventory** — Sidebar filters (make, year, price, listing type, sort), collapsible sections
+- 🔄 **Car Comparison** — Select up to 4 cars to compare side-by-side with difference highlighting
+- 🏷️ **Listing Ribbons** — Color-coded: Consigned (gray), Inventory (blue), Certified (gold), Trusted Partner (silver)
+- ⭐ **Featured Cars** — Admin-promoted vehicles on tenant landing pages
+- 🚗 **Car Detail Pages** — Image carousel with lightbox, keyboard navigation, thumbnails
+- 📋 **VIN Decode** — NHTSA API integration for automatic vehicle identification
+- 💬 **"I'm Interested" Contact Form** — Public car inquiry without registration
+- 🚙 **Consignment Inquiry** — "Sell My Car" multi-step form with VIN lookup
 
 ### 🏢 Multi-Tenancy
-- 🏪 **Tenant System** — Multiple car dealers/organizations on one platform
-- 👥 **Employee Management** — Tenant admins add/remove dealership employees
-- 🔒 **Scoped Access** — Dealers only see their own tenant's data
-- 🤝 **Shared Inventory** — Inventory cars visible across tenants as "Trusted Partner"
-- 🔐 **Consignment Privacy** — Consigned cars stay private to their tenant
+- 🏪 **Dealer System** — Multiple car dealers on one platform with URL-based routing
+- 👥 **Employee Management** — Dealer admins add/remove employees
+- 🔒 **Scoped Access** — Dealers see only their own tenant's data
+- 🤝 **Shared Inventory** — Cars visible across dealers as "Trusted Partner"
+- 🚫 **Hide External Cars** — Pro+ dealers can hide specific cars from their view
+- 📊 **Hidden Cars Filter** — Employees can review and unhide cars
+- 🔐 **Consignment Privacy** — Consigned cars stay private to their dealer
+- ⏸ **Dealer Activate/Deactivate** — Soft delete (pause) or hard delete dealers
 
 ### 📊 CRM (Customer Relationship Management)
 - 📊 **Dashboard** — Platform stats (SuperAdmin) or dealership stats (revenue, profit, monthly sales)
 - 💰 **Cost Tracking** — Track purchase price, sale price, and profit per car
 - 🧾 **Expense Management** — Log repairs, marketing, transport, inspection costs per vehicle
 - 📝 **Communication Notes** — Internal notes timeline per car with author tracking
-- 👥 **Employee Management** — TenantAdmin adds/removes dealership employees
-- 📡 **External Publishing** — Publish listings to Facebook, Craigslist, Cars.com, AutoTrader, CarGurus, OfferUp (pluggable connector pattern)
+- 👥 **Employee Management** — DealerAdmin adds/removes employees
+- 💰 **Investor Tracking** — Manage investors, contributions, car funding sources (Pro+)
+- 📡 **External Publishing** — Publish to Facebook, Craigslist, Cars.com, AutoTrader, CarGurus, OfferUp
 - 🎨 **Branding** — Customize colors, logo, dealer name, tagline, site language per tenant
 - 🧩 **Landing Page Editor** — Drag-and-drop section reordering (Pro tier)
+- 📩 **Car Inquiries** — View and manage public interest submissions
 
 ### 💎 Tenant Tiers
-- 🥉 **Basic** — Brand colors, logo, CRM inventory, expenses, employee management
-- 🥈 **Pro** — + External publishing, advanced statistics, landing page layout editor
-- 🥇 **Enterprise** — + Custom domain, priority badge
+- 🥉 **Basic (Free)** — Brand colors, logo, CRM, expenses, employees
+- 🥈 **Pro ($)** — + Publishing, investors, advanced stats, layout editor, hide external cars
+- 🥇 **Enterprise ($$)** — + Custom domain, priority support
 
 ### 🔐 Auth & Security
 - 🔑 **JWT Authentication** — Secure token-based auth with refresh tokens
-- 🌐 **Social Login** — Google and GitHub OAuth
 - 👮 **Role-Based Access** — SuperAdmin, Admin, TenantAdmin, User
-- 🌐 **Multi-Language** — Full English and Spanish support, admin-controlled
+- 💎 **Tier-Based Feature Gating** — `[RequireTier]` attribute + `<TierGate>` component (🚗🔧 missing tire page)
+- 🌐 **Multi-Language** — Full English and Spanish support, per-tenant language setting
 
 ### 🎨 UX
-- 📱 **Responsive Design** — Works on desktop, tablet, and mobile
+- 📱 **Responsive Design** — Desktop, tablet, and mobile
 - 🚧 **Fun 404 Page** — Car crash animation with 5-second auto-redirect
+- 🖼️ **Image Carousel** — Fullscreen lightbox with arrows, keyboard nav, thumbnails
+- 🏷️ **Tenant-Aware Nav** — Shows dealer name/logo, context-appropriate links
 - 🖼️ **Image Carousel** — Fullscreen lightbox with arrows, keyboard nav, thumbnails
 
 ## Project Structure

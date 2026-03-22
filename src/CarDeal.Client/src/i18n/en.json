@@ -330,7 +330,11 @@
     "hideFromInventory": "Don't show on my inventory",
     "showOnInventory": "Show on my inventory",
     "carHidden": "Car hidden from your inventory",
-    "carUnhidden": "Car visible on your inventory again"
+    "carUnhidden": "Car visible on your inventory again",
+    "hiddenCars": "Hidden Cars",
+    "showHiddenCars": "Show cars hidden from my inventory",
+    "hiddenCount": "{{count}} cars hidden",
+    "hidden": "Hidden"
   },
   "listingType": {
     "Consigned": "Consigned",
