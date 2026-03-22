@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cardeal-api.azurewebsites.net/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -18,11 +18,15 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Only auto-redirect on 401 if we had a token (session expired), not on login attempts
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      const hadToken = localStorage.getItem('token');
+      if (hadToken) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     // Surface tier-required errors so components can react
     if (error.response?.status === 403 && error.response?.data?.error === 'tier_required') {
