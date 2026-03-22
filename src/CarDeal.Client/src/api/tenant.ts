@@ -28,4 +28,8 @@ export const tenantApi = {
     apiClient.post(`/tenant/${id}/users`, { userId }).then(r => r.data),
   removeUser: (id: number, userId: string) =>
     apiClient.delete(`/tenant/${id}/users/${userId}`),
+  resetPassword: (id: number) =>
+    apiClient.post<{ email: string; newPassword: string; message: string }>(`/tenant/${id}/reset-password`).then(r => r.data),
+  sendCredentials: (id: number) =>
+    apiClient.post<{ email: string; message: string }>(`/tenant/${id}/send-credentials`).then(r => r.data),
 };

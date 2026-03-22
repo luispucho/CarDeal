@@ -353,7 +353,15 @@
     "allTiers": "All Tiers",
     "allStatuses": "All Statuses",
     "slugRequired": "Identifier (slug) is required",
-    "slugTaken": "This identifier is already in use. Please choose a different one."
+    "slugTaken": "This identifier is already in use. Please choose a different one.",
+    "adminEmail": "Admin Email",
+    "adminAccount": "Admin Account",
+    "resetPassword": "Reset Password",
+    "sendCredentials": "Send Credentials",
+    "newPasswordGenerated": "New password generated:",
+    "savePasswordWarning": "Save this password! It won't be shown again.",
+    "credentialsSent": "Credentials email sent!",
+    "passwordReset": "Password has been reset!"
   },
   "tierGate": {
     "title": "Whoa! This car needs a new tire",
