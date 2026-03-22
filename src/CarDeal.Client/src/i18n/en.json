@@ -552,7 +552,20 @@
     "fundingAdded": "Funding source added!",
     "fundingDeleted": "Funding source removed",
     "totalFunded": "Total Funded",
-    "confirmDeleteInvestor": "Delete this investor? This cannot be undone."
+    "confirmDeleteInvestor": "Delete this investor? This cannot be undone.",
+    "visitorInsights": "Visitor Insights",
+    "visitorInsightsDesc": "Last 30 days",
+    "totalVisits": "Total Visits",
+    "uniqueVisitors": "Unique Visitors",
+    "avgTimeOnPage": "Avg. Time on Page",
+    "seconds": "sec",
+    "topLocations": "Top Visitor Locations",
+    "visitsByPage": "Visits by Page",
+    "topViewedCars": "Most Viewed Cars",
+    "dailyVisits": "Daily Visits",
+    "views": "views",
+    "visits": "visits",
+    "noInsightsYet": "No visitor data yet. Insights will appear once your pages start getting traffic."
   },
   "saas": {
     "heroTitle": "The All-in-One Car Dealership Platform",

@@ -7,6 +7,7 @@ import { crmApi } from '../api/crm';
 import { useAuth } from '../context/AuthContext';
 import ListingRibbon from '../components/common/ListingRibbon';
 import { getCurrentTenant, setCurrentTenant } from '../utils/tenantCookie';
+import { usePageTracking } from '../hooks/usePageTracking';
 
 const LISTING_TYPES = ['Consigned', 'Inventory', 'CertifiedInventory', 'TrustedPartner'] as const;
 const MAX_COMPARE = 4;
@@ -155,6 +156,7 @@ export default function InventoryPage() {
   // viewerTenantId is for UI context (ribbons); filterTenantId is for API filtering
   const viewerTenantId = resolvedTenantId ?? getCurrentTenant() ?? undefined;
   const filterTenantId = tenantIdOrSlug ? resolvedTenantId : undefined;
+  usePageTracking('/inventory', { tenantId: resolvedTenantId });
 
   useEffect(() => {
     if (resolvedTenantId) setCurrentTenant(resolvedTenantId);

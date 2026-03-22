@@ -552,7 +552,20 @@
     "fundingAdded": "¡Fuente de financiamiento agregada!",
     "fundingDeleted": "Fuente de financiamiento eliminada",
     "totalFunded": "Total Financiado",
-    "confirmDeleteInvestor": "¿Eliminar este inversionista? Esto no se puede deshacer."
+    "confirmDeleteInvestor": "¿Eliminar este inversionista? Esto no se puede deshacer.",
+    "visitorInsights": "Insights de Visitantes",
+    "visitorInsightsDesc": "Últimos 30 días",
+    "totalVisits": "Visitas Totales",
+    "uniqueVisitors": "Visitantes Únicos",
+    "avgTimeOnPage": "Tiempo Promedio en Página",
+    "seconds": "seg",
+    "topLocations": "Ubicaciones Principales",
+    "visitsByPage": "Visitas por Página",
+    "topViewedCars": "Autos Más Vistos",
+    "dailyVisits": "Visitas Diarias",
+    "views": "vistas",
+    "visits": "visitas",
+    "noInsightsYet": "Aún no hay datos de visitantes. Los insights aparecerán cuando tus páginas comiencen a recibir tráfico."
   },
   "saas": {
     "heroTitle": "La Plataforma Todo en Uno para Concesionarios",

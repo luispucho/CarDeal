@@ -87,6 +87,7 @@ else
     builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 }
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IOfferService, OfferService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { publicApi, type PublicCar } from '../api/public';
 import { setCurrentTenant } from '../utils/tenantCookie';
+import { usePageTracking } from '../hooks/usePageTracking';
 import ListingRibbon from '../components/common/ListingRibbon';
 import NotFoundPage from './NotFoundPage';
 
@@ -22,6 +23,7 @@ export default function TenantLandingPage() {
   });
 
   const tenantId = branding?.tenantId;
+  usePageTracking('/tenant-landing', { tenantId });
 
   const { data: cars } = useQuery({
     queryKey: ['tenantCars', tenantId],

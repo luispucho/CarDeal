@@ -28,6 +28,7 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<ConsignmentInquiry> ConsignmentInquiries => Set<ConsignmentInquiry>();
     public DbSet<CarInquiry> CarInquiries => Set<CarInquiry>();
     public DbSet<HiddenCar> HiddenCars => Set<HiddenCar>();
+    public DbSet<PageView> PageViews => Set<PageView>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -195,6 +196,16 @@ public class AppDbContext : IdentityDbContext<User>
             e.HasOne(h => h.Tenant).WithMany().HasForeignKey(h => h.TenantId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(h => h.Car).WithMany().HasForeignKey(h => h.CarId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(h => new { h.TenantId, h.CarId }).IsUnique();
+        });
+
+        builder.Entity<PageView>(e =>
+        {
+            e.HasOne(pv => pv.Tenant).WithMany().HasForeignKey(pv => pv.TenantId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(pv => pv.Car).WithMany().HasForeignKey(pv => pv.CarId).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(pv => pv.TenantId);
+            e.HasIndex(pv => pv.CarId);
+            e.HasIndex(pv => pv.CreatedAt);
+            e.HasIndex(pv => pv.Page);
         });
     }
 }
