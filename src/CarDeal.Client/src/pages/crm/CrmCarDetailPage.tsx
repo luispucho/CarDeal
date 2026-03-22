@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
@@ -94,7 +94,7 @@ export default function CrmCarDetailPage() {
   // ── Financials form ──
 
   const financialsForm = useForm<FinancialsForm>({
-    resolver: zodResolver(financialsSchema),
+    resolver: zodResolver(financialsSchema) as Resolver<FinancialsForm>,
     values: {
       purchasePrice: car?.financials?.purchasePrice ?? undefined,
       salePrice: car?.financials?.salePrice ?? undefined,
@@ -115,7 +115,7 @@ export default function CrmCarDetailPage() {
   // ── Expense form ──
 
   const expenseForm = useForm<ExpenseForm>({
-    resolver: zodResolver(expenseSchema),
+    resolver: zodResolver(expenseSchema) as Resolver<ExpenseForm>,
     defaultValues: { type: 'Repair', amount: 0, description: '', date: '' },
   });
 
