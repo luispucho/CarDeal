@@ -14,9 +14,9 @@ const FEATURES = [
   { icon: '🎨', key: 'customBranding' },
 ];
 
-const BASIC_FEATURES = ['brandColors', 'logo', 'crm', 'employees', 'inventory'];
-const PRO_FEATURES = ['externalPub', 'advancedStats', 'layoutEditor', 'investors'];
-const ENTERPRISE_FEATURES = ['customDomain', 'prioritySupport', 'dedicatedAnalytics'];
+const BASIC_FEATURES = ['brandColors', 'logo', 'inventory'];
+const PRO_FEATURES = ['crm', 'employees', 'externalPub', 'advancedStats', 'layoutEditor', 'investors'];
+const ENTERPRISE_FEATURES = ['aiAssistant', 'aiSalesAgent', 'aiAnalytics', 'customDomain', 'prioritySupport'];
 
 export default function SaasLandingPage() {
   const { t } = useTranslation();
