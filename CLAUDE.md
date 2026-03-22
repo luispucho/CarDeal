@@ -54,7 +54,8 @@ npm run dev         # http://localhost:5173 — proxies API calls to localhost:5
 
 ### Test Credentials
 
-- **Admin**: `admin@cardeal.com` / `Admin123!` (seeded on startup)
+- **SuperAdmin (Production)**: `luis.gr@outlook.com` / `CarDealAdmin2026!`
+- **SuperAdmin (Local dev)**: `admin@cardeal.com` / `Admin123!` (seeded on startup)
 
 ### Seeding Sample Cars via API
 
