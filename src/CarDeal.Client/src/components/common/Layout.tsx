@@ -19,6 +19,7 @@ export default function Layout() {
   }, [i18n]);
 
   const isTenantUser = !!user?.tenantId;
+  const showCrm = isTenantUser || isSuperAdmin;
   const isTenantAdmin = isAdmin || isSuperAdmin;
 
   const { data: unreadCount } = useQuery({
@@ -75,17 +76,17 @@ export default function Layout() {
                       {t('nav.tenants')}
                     </Link>
                   )}
-                  {isTenantUser && (
+                  {showCrm && (
                     <Link to="/crm" className="text-gray-700 hover:text-blue-600 transition font-medium">
                       📊 {t('nav.crm')}
                     </Link>
                   )}
-                  {isTenantUser && (
+                  {showCrm && (
                     <Link to="/crm/investors" className="text-gray-700 hover:text-blue-600 transition font-medium">
                       💰 {t('crm.investors')}
                     </Link>
                   )}
-                  {isTenantUser && isTenantAdmin && (
+                  {showCrm && isTenantAdmin && (
                     <>
                       <Link to="/crm/connections" className="text-gray-700 hover:text-blue-600 transition font-medium">
                         🔗 {t('crm.connections')}
