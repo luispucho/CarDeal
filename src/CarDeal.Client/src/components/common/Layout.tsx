@@ -24,9 +24,6 @@ export default function Layout() {
   const isTenantAdmin = isAdmin || isSuperAdmin;
 
   const cookieTenant = getCurrentTenant();
-  const inventoryLink = cookieTenant ? `/${cookieTenant}/inventory` : '/inventory';
-  const sellLink = cookieTenant ? `/${cookieTenant}/sell` : '/0';
-  const brandLink = cookieTenant ? `/${cookieTenant}` : '/0';
 
   // Fetch tenant branding when viewing a tenant's site
   const { data: tenantBranding } = useQuery({
@@ -36,12 +33,18 @@ export default function Layout() {
       const tenant = tenants.find((t: any) => t.id === cookieTenant || t.slug === String(cookieTenant));
       if (!tenant) return null;
       try {
-        return await publicApi.getBranding(tenant.slug);
-      } catch { return { tenantName: tenant.name, logoUrl: null } as any; }
+        const branding = await publicApi.getBranding(tenant.slug);
+        return { ...branding, slug: tenant.slug };
+      } catch { return { tenantName: tenant.name, logoUrl: null, slug: tenant.slug } as any; }
     },
     enabled: !!cookieTenant,
     staleTime: 60000,
   });
+
+  const tenantSlug = tenantBranding?.slug || cookieTenant;
+  const inventoryLink = tenantSlug ? `/${tenantSlug}/inventory` : '/inventory';
+  const sellLink = tenantSlug ? `/${tenantSlug}/sell` : '/0';
+  const brandLink = tenantSlug ? `/${tenantSlug}` : '/0';
 
   const { data: unreadCount } = useQuery({
     queryKey: ['unreadCount'],
