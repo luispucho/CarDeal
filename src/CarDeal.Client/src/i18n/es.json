@@ -301,7 +301,11 @@
     "specification": "Especificación",
     "make": "Marca",
     "model": "Modelo",
-    "noImage": "Sin Imagen"
+    "noImage": "Sin Imagen",
+    "year": "Año",
+    "price": "Precio",
+    "listingTypeFilter": "Tipo de Listado",
+    "noMax": "Sin Máximo"
   },
   "listingType": {
     "Consigned": "Consignado",

@@ -24,13 +24,13 @@ public class PublicController : ControllerBase
             .Include(c => c.Images)
             .Include(c => c.Tenant)
             .Where(c => c.Status != CarStatus.Sold &&
-                        c.Status != CarStatus.Pending &&
                         c.Status != CarStatus.Rejected &&
-                        c.Status != CarStatus.Withdrawn)
+                        c.Status != CarStatus.Withdrawn &&
+                        c.Status != CarStatus.Pending)
             .Where(c => c.ListingType == Models.ListingType.Inventory ||
                         c.ListingType == Models.ListingType.CertifiedInventory ||
                         c.ListingType == Models.ListingType.TrustedPartner ||
-                        (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null))
+                        (c.ListingType == Models.ListingType.Consigned && c.TenantId != null))
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(make))

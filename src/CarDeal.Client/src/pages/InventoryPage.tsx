@@ -8,6 +8,27 @@ import ListingRibbon from '../components/common/ListingRibbon';
 const LISTING_TYPES = ['Consigned', 'Inventory', 'CertifiedInventory', 'TrustedPartner'] as const;
 const MAX_COMPARE = 4;
 
+const MIN_PRICE_OPTIONS = [0, 5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000, 75000];
+const MAX_PRICE_OPTIONS = [10000, 15000, 20000, 25000, 30000, 40000, 50000, 75000, 100000, 150000];
+
+function FilterSection({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-gray-100 pb-4">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-sm font-semibold text-gray-800 py-2"
+      >
+        {title}
+        <span className={`transform transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+          ▾
+        </span>
+      </button>
+      {isOpen && <div className="mt-2 space-y-2">{children}</div>}
+    </div>
+  );
+}
+
 function CarCard({
   car,
   isSelected,
@@ -158,10 +179,9 @@ export default function InventoryPage() {
   };
 
   const sidebarContent = (
-    <div className="space-y-6">
+    <div className="space-y-1">
       {/* Search */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">{t('inventory.searchMake')}</label>
+      <FilterSection title={t('inventory.searchMake')} defaultOpen={true}>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
           <input
@@ -169,19 +189,18 @@ export default function InventoryPage() {
             value={make}
             onChange={e => setMake(e.target.value)}
             placeholder={t('inventory.searchMake')}
-            className="w-full border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-gray-200 rounded-lg pl-9 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
-      </div>
+      </FilterSection>
 
       {/* Year */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">{t('cars.year')}</label>
+      <FilterSection title={t('inventory.year')}>
         <div className="flex gap-2">
           <select
             value={yearMin}
             onChange={e => setYearMin(e.target.value)}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           >
             <option value="">{t('inventory.yearFrom')}</option>
             {yearOptions.map(y => (
@@ -191,7 +210,7 @@ export default function InventoryPage() {
           <select
             value={yearMax}
             onChange={e => setYearMax(e.target.value)}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           >
             <option value="">{t('inventory.yearTo')}</option>
             {yearOptions.map(y => (
@@ -199,54 +218,56 @@ export default function InventoryPage() {
             ))}
           </select>
         </div>
-      </div>
+      </FilterSection>
 
       {/* Price Range */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">{t('inventory.allPrices')}</label>
+      <FilterSection title={t('inventory.price')}>
         <div className="flex gap-2">
-          <input
-            type="number"
+          <select
             value={priceMin}
             onChange={e => setPriceMin(e.target.value)}
-            placeholder={t('inventory.priceFrom')}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-          <input
-            type="number"
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          >
+            <option value="">{t('inventory.priceFrom')}</option>
+            {MIN_PRICE_OPTIONS.map(p => (
+              <option key={p} value={p}>${p.toLocaleString()}</option>
+            ))}
+          </select>
+          <select
             value={priceMax}
             onChange={e => setPriceMax(e.target.value)}
-            placeholder={t('inventory.priceTo')}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          />
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          >
+            <option value="">{t('inventory.priceTo')}</option>
+            {MAX_PRICE_OPTIONS.map(p => (
+              <option key={p} value={p}>${p.toLocaleString()}</option>
+            ))}
+            <option value="">{t('inventory.noMax')}</option>
+          </select>
         </div>
-      </div>
+      </FilterSection>
 
       {/* Listing Type checkboxes */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">{t('crm.listingType')}</label>
-        <div className="space-y-2">
-          {LISTING_TYPES.map(lt => (
-            <label key={lt} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedListingTypes.includes(lt)}
-                onChange={() => toggleListingType(lt)}
-                className="w-4 h-4 rounded text-blue-600"
-              />
-              <span className="text-sm text-gray-600">{t(`listingType.${lt}`)}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+      <FilterSection title={t('inventory.listingTypeFilter')}>
+        {LISTING_TYPES.map(lt => (
+          <label key={lt} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selectedListingTypes.includes(lt)}
+              onChange={() => toggleListingType(lt)}
+              className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+            />
+            <span className="text-sm text-gray-600 cursor-pointer">{t(`listingType.${lt}`)}</span>
+          </label>
+        ))}
+      </FilterSection>
 
       {/* Sort By */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">{t('inventory.sortBy')}</label>
+      <FilterSection title={t('inventory.sortBy')}>
         <select
           value={sort}
           onChange={e => setSort(e.target.value)}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
         >
           <option value="">{t('inventory.sortBy')}</option>
           <option value="newest">{t('inventory.newest')}</option>
@@ -255,12 +276,12 @@ export default function InventoryPage() {
           <option value="year_desc">{t('inventory.yearDesc')}</option>
           <option value="mileage_asc">{t('inventory.mileageAsc')}</option>
         </select>
-      </div>
+      </FilterSection>
 
       {/* Clear Filters */}
       <button
         onClick={clearFilters}
-        className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium transition"
+        className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium transition pt-2"
       >
         {t('inventory.clearFilters')}
       </button>
@@ -304,7 +325,7 @@ export default function InventoryPage() {
       <div className="flex gap-8">
         {/* Sidebar - desktop */}
         <aside className="hidden lg:block w-[280px] flex-shrink-0">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sticky top-8">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sticky top-8">
             {sidebarContent}
           </div>
         </aside>

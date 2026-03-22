@@ -149,7 +149,9 @@ public class AuthController : ControllerBase
             signingCredentials: creds
         );
 
-        var role = roles.Contains("Admin") ? "Admin" : "User";
+        var role = roles.Contains("SuperAdmin") ? "SuperAdmin"
+                 : roles.Contains("Admin") ? "Admin" 
+                 : "User";
 
         return new AuthResponse(
             new JwtSecurityTokenHandler().WriteToken(token),
