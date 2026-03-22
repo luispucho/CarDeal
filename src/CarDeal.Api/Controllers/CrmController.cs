@@ -401,10 +401,31 @@ public class CrmController : ControllerBase
             .Take(12)
             .ToList();
 
+        // Visitor location stats for this tenant
+        var now = DateTime.UtcNow;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var startOfYear = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var tenantPageViews = await _db.PageViews
+            .Where(pv => pv.TenantId == tenantId && pv.CreatedAt >= startOfYear)
+            .ToListAsync();
+
+        var topVisitorLocations = tenantPageViews
+            .Where(pv => !string.IsNullOrEmpty(pv.Country))
+            .GroupBy(pv => new { pv.Country, pv.City })
+            .Select(g => new VisitorLocationStat(g.Key.Country!, g.Key.City, g.Count()))
+            .OrderByDescending(l => l.Visits)
+            .Take(10)
+            .ToList();
+
+        var visitsThisMonth = tenantPageViews.Count(pv => pv.CreatedAt >= startOfMonth);
+        var visitsThisYear = tenantPageViews.Count;
+
         return Ok(new TenantStatsResponse(
             totalCars, soldCars, consignedCars, pendingCars, activeInventory,
             totalRevenue, totalExpenses, totalProfit,
-            topProfitableCars, expensesByType, monthlySales));
+            topProfitableCars, expensesByType, monthlySales,
+            topVisitorLocations, visitsThisMonth, visitsThisYear));
     }
 
     // ─── SuperAdmin Platform Stats ──────────────────────────────
@@ -435,8 +456,30 @@ public class CrmController : ControllerBase
             var revenue = tenantCars
                 .Where(c => c.Financials?.SalePrice != null)
                 .Sum(c => c.Financials!.SalePrice!.Value);
-            return new TenantSalesStats(t.Id, t.Name, tenantCars.Count,
-                tenantCars.Count(c => c.Status == CarStatus.Sold), revenue);
+            return new { Tenant = t, TenantCars = tenantCars, Revenue = revenue };
+        }).ToList();
+
+        var now = DateTime.UtcNow;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var startOfYear = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var visitsByTenant = await _db.PageViews
+            .Where(pv => pv.TenantId != null && pv.CreatedAt >= startOfYear)
+            .GroupBy(pv => pv.TenantId!.Value)
+            .Select(g => new
+            {
+                TenantId = g.Key,
+                MonthVisits = g.Count(pv => pv.CreatedAt >= startOfMonth),
+                YearVisits = g.Count()
+            })
+            .ToDictionaryAsync(x => x.TenantId);
+
+        var salesByTenantResult = salesByTenant.Select(s =>
+        {
+            visitsByTenant.TryGetValue(s.Tenant.Id, out var visits);
+            return new TenantSalesStats(s.Tenant.Id, s.Tenant.Name, s.TenantCars.Count,
+                s.TenantCars.Count(c => c.Status == CarStatus.Sold), s.Revenue,
+                visits?.MonthVisits ?? 0, visits?.YearVisits ?? 0);
         }).OrderByDescending(s => s.Revenue).ToList();
 
         var topBrands = allCars
@@ -448,7 +491,7 @@ public class CrmController : ControllerBase
 
         return Ok(new PlatformStatsResponse(
             totalTenants, totalCars, totalSold, totalActive,
-            salesByTenant, topBrands, totalRevenue));
+            salesByTenantResult, topBrands, totalRevenue));
     }
 
     [HttpPost("admin/tenants/{id}/reset-admin")]

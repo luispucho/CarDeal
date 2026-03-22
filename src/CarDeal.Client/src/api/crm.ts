@@ -77,6 +77,9 @@ export interface TenantStatsResponse {
   topProfitableCars: { carId: number; carName: string; profit?: number }[];
   expensesByType: { type: string; total: number }[];
   monthlySales: { month: string; count: number; revenue: number }[];
+  topVisitorLocations: { country: string; city?: string; visits: number }[];
+  visitsThisMonth: number;
+  visitsThisYear: number;
 }
 
 export interface PlatformStatsResponse {
@@ -84,7 +87,7 @@ export interface PlatformStatsResponse {
   totalCars: number;
   totalSold: number;
   totalActive: number;
-  salesByTenant: { tenantId: number; tenantName: string; totalCars: number; soldCars: number; revenue: number }[];
+  salesByTenant: { tenantId: number; tenantName: string; totalCars: number; soldCars: number; revenue: number; visitsThisMonth: number; visitsThisYear: number }[];
   topBrands: { make: string; count: number; soldCount: number }[];
   totalRevenue: number;
 }

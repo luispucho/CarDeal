@@ -62,6 +62,45 @@ function TenantDashboard() {
         ))}
       </div>
 
+      {/* Visitor Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="bg-white rounded-xl shadow-sm p-5">
+          <p className="text-sm text-gray-500">📊 {t('crm.visitsThisMonth')}</p>
+          <p className="text-3xl font-bold mt-1">{stats.visitsThisMonth}</p>
+          <div className="h-1 bg-cyan-500 rounded mt-3 w-12" />
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-5">
+          <p className="text-sm text-gray-500">📊 {t('crm.visitsThisYear')}</p>
+          <p className="text-3xl font-bold mt-1">{stats.visitsThisYear}</p>
+          <div className="h-1 bg-teal-500 rounded mt-3 w-12" />
+        </div>
+      </div>
+
+      {/* Top Visitor Locations */}
+      {stats.topVisitorLocations.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <h2 className="text-lg font-semibold mb-4">🌍 {t('crm.topLocations')}</h2>
+          <div className="space-y-2">
+            {stats.topVisitorLocations.map((loc, i) => {
+              const maxVisits = stats.topVisitorLocations[0].visits;
+              return (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium truncate">{loc.city ? `${loc.city}, ${loc.country}` : loc.country}</span>
+                      <span className="text-gray-500 ml-2">{loc.visits} {t('crm.visits')}</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${(loc.visits / maxVisits) * 100}%` }} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <TierGate requiredTier="Pro" currentTier={branding?.tier}>
 
       <VisitorInsightsPanel />
@@ -190,6 +229,8 @@ function PlatformDashboard() {
                 <th className="pb-3 font-medium text-right">{t('crm.cars')}</th>
                 <th className="pb-3 font-medium text-right">{t('crm.sold')}</th>
                 <th className="pb-3 font-medium text-right">{t('crm.revenue')}</th>
+                <th className="pb-3 font-medium text-right">{t('crm.visitsThisMonth')}</th>
+                <th className="pb-3 font-medium text-right">{t('crm.visitsThisYear')}</th>
               </tr>
             </thead>
             <tbody>
@@ -199,6 +240,8 @@ function PlatformDashboard() {
                   <td className="py-3 text-right">{tenant.totalCars}</td>
                   <td className="py-3 text-right">{tenant.soldCars}</td>
                   <td className="py-3 text-right font-medium">{formatCurrency(tenant.revenue)}</td>
+                  <td className="py-3 text-right">{tenant.visitsThisMonth}</td>
+                  <td className="py-3 text-right">{tenant.visitsThisYear}</td>
                 </tr>
               ))}
             </tbody>
