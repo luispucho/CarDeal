@@ -427,6 +427,7 @@
     "backgroundColor": "Background Color",
     "dealerName": "Dealer Name",
     "tagline": "Tagline",
+    "siteLanguage": "Site Language",
     "logo": "Logo",
     "uploadLogo": "Upload Logo",
     "removeLogo": "Remove Logo",

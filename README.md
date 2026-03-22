@@ -74,11 +74,17 @@ npm run dev
 
 ### Default Credentials
 
-| Role        | Email               | Password    | Access |
-|-------------|---------------------|-------------|--------|
-| Super Admin | admin@cardeal.com   | Admin123!   | Full platform control, CRM, tenant management |
+Register a new account through the UI to use the app as a regular seller.
 
-The seeded admin has both **SuperAdmin** and **Admin** roles. Register a new account through the UI to use the app as a regular seller.
+### Demo Tenants & Accounts
+
+| Tenant | Tier | Admin Email | Password | Employees |
+|--------|------|-------------|----------|-----------|
+| **Sunshine Motors** | Basic | sarah@sunshinemotors.com | Sunshine1 | mike@sunshinemotors.com, lisa@sunshinemotors.com |
+| **Elite Auto Group** | Pro | james@eliteauto.com | EliteAuto1 | emma@eliteauto.com, carlos@eliteauto.com |
+| **Pacific Car Exchange** | Enterprise | diana@pacificcars.com | Pacific2026 | ryan@pacificcars.com, sophia@pacificcars.com |
+
+Employee passwords are the same as their tenant admin. Each tenant has 10 pre-loaded inventory cars.
 
 ### Seeded Roles
 
