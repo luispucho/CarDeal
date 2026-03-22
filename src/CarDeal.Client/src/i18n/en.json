@@ -565,7 +565,9 @@
     "dailyVisits": "Daily Visits",
     "views": "views",
     "visits": "visits",
-    "noInsightsYet": "No visitor data yet. Insights will appear once your pages start getting traffic."
+    "noInsightsYet": "No visitor data yet. Insights will appear once your pages start getting traffic.",
+    "visitsThisMonth": "Visits This Month",
+    "visitsThisYear": "Visits This Year"
   },
   "saas": {
     "heroTitle": "The All-in-One Car Dealership Platform",

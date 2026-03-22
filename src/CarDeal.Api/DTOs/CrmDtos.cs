@@ -29,7 +29,7 @@ public record PlatformStatsResponse(
     List<BrandStats> TopBrands,
     decimal TotalRevenue);
 
-public record TenantSalesStats(int TenantId, string TenantName, int TotalCars, int SoldCars, decimal Revenue);
+public record TenantSalesStats(int TenantId, string TenantName, int TotalCars, int SoldCars, decimal Revenue, int VisitsThisMonth, int VisitsThisYear);
 public record BrandStats(string Make, int Count, int SoldCount);
 
 public record TenantStatsResponse(
@@ -37,7 +37,9 @@ public record TenantStatsResponse(
     decimal TotalRevenue, decimal TotalExpenses, decimal TotalProfit,
     List<CarProfitStats> TopProfitableCars,
     List<ExpenseBreakdown> ExpensesByType,
-    List<MonthlySales> MonthlySales);
+    List<MonthlySales> MonthlySales,
+    List<VisitorLocationStat> TopVisitorLocations,
+    int VisitsThisMonth, int VisitsThisYear);
 
 public record CarProfitStats(int CarId, string CarName, decimal? Profit);
 public record ExpenseBreakdown(string Type, decimal Total);
@@ -45,3 +47,4 @@ public record MonthlySales(string Month, int Count, decimal Revenue);
 
 public record EmployeeResponse(string Id, string Email, string FullName, string Role);
 public record AddEmployeeRequest([Required] string Email);
+public record VisitorLocationStat(string Country, string? City, int Visits);

@@ -565,7 +565,9 @@
     "dailyVisits": "Visitas Diarias",
     "views": "vistas",
     "visits": "visitas",
-    "noInsightsYet": "Aún no hay datos de visitantes. Los insights aparecerán cuando tus páginas comiencen a recibir tráfico."
+    "noInsightsYet": "Aún no hay datos de visitantes. Los insights aparecerán cuando tus páginas comiencen a recibir tráfico.",
+    "visitsThisMonth": "Visitas Este Mes",
+    "visitsThisYear": "Visitas Este Año"
   },
   "saas": {
     "heroTitle": "La Plataforma Todo en Uno para Concesionarios",
