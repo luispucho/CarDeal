@@ -87,4 +87,15 @@ public class CarsController : ControllerBase
         var deleted = await _carService.RemoveImageAsync(id, imageId, UserId, tenantId);
         return deleted ? NoContent() : NotFound();
     }
+
+    [HttpPut("{id}/sharing")]
+    public async Task<IActionResult> ToggleSharing(int id, [FromBody] ToggleSharingRequest request)
+    {
+        var tenantId = await GetUserTenantId();
+        var car = await _carService.GetByIdAsync(id, UserId, tenantId);
+        if (car == null) return NotFound();
+
+        var updated = await _carService.SetSharingAsync(id, UserId, request.IsShared, tenantId);
+        return updated ? Ok(new { isShared = request.IsShared }) : NotFound();
+    }
 }

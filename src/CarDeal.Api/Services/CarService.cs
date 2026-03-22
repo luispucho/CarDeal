@@ -16,6 +16,7 @@ public interface ICarService
     Task<CarImageResponse> AddImageAsync(int carId, string userId, Stream stream, string fileName, string contentType, int? tenantId = null);
     Task<bool> RemoveImageAsync(int carId, int imageId, string userId, int? tenantId = null);
     Task SetFeaturedAsync(int carId, bool isFeatured);
+    Task<bool> SetSharingAsync(int carId, string userId, bool isShared, int? tenantId = null);
 }
 
 public class CarService : ICarService
@@ -193,7 +194,7 @@ public class CarService : ICarService
         car.Id, car.UserId, car.User.FullName,
         car.Make, car.Model, car.Year, car.Mileage,
         car.VIN, car.Color, car.Condition, car.Description, car.AskingPrice,
-        car.IsFeatured,
+        car.IsFeatured, car.IsShared,
         car.Status.ToString(), car.CreatedAt, car.UpdatedAt,
         car.TenantId, car.Tenant?.Name,
         car.Images.Select(i => new CarImageResponse(i.Id, i.BlobUrl, i.FileName, i.IsPrimary, i.UploadedAt)).ToList(),
@@ -207,5 +208,20 @@ public class CarService : ICarService
         car.IsFeatured = isFeatured;
         car.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<bool> SetSharingAsync(int carId, string userId, bool isShared, int? tenantId = null)
+    {
+        Car? car;
+        if (tenantId != null)
+            car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == carId && c.TenantId == tenantId);
+        else
+            car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == carId && c.UserId == userId);
+        if (car == null) return false;
+
+        car.IsShared = isShared;
+        car.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        return true;
     }
 }

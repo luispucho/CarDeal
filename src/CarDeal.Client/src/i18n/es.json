@@ -139,7 +139,10 @@
     "failedUpdate": "Error al actualizar el auto",
     "addPhotos": "Agregar Fotos",
     "dragOrClick": "Haz clic para agregar fotos",
-    "confirmDeletePhoto": "¿Estás seguro de que quieres eliminar esta foto?"
+    "confirmDeletePhoto": "¿Estás seguro de que quieres eliminar esta foto?",
+    "shareWithDealers": "Compartir en inventario de otros dealers",
+    "sharedEnabled": "Visible en todos los inventarios",
+    "sharedDisabled": "Solo visible en tu inventario"
   },
   "carStatus": {
     "Pending": "Pendiente",

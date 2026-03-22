@@ -76,6 +76,7 @@ export interface Car {
   askingPrice?: number;
   status: string;
   isFeatured: boolean;
+  isShared: boolean;
   tenantId?: number | null;
   tenantName?: string | null;
   createdAt: string;

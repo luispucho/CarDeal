@@ -26,6 +26,8 @@ public record UpdateCarRequest(
     decimal? AskingPrice
 );
 
+public record ToggleSharingRequest(bool IsShared);
+
 public record CarResponse(
     int Id,
     string UserId,
@@ -40,6 +42,7 @@ public record CarResponse(
     string? Description,
     decimal? AskingPrice,
     bool IsFeatured,
+    bool IsShared,
     string Status,
     DateTime CreatedAt,
     DateTime UpdatedAt,
@@ -62,6 +65,7 @@ public record PublicCarResponse(
     string ListingType,
     string? TenantName,
     int? TenantId,
+    bool IsShared,
     List<CarImageResponse> Images
 );
 
