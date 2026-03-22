@@ -54,7 +54,14 @@ public class PublicController : ControllerBase
             "price_desc" => query.OrderByDescending(c => c.AskingPrice),
             "year_desc" => query.OrderByDescending(c => c.Year),
             "mileage_asc" => query.OrderBy(c => c.Mileage),
-            _ => query.OrderByDescending(c => c.CreatedAt),
+            _ => tenantId.HasValue
+                ? query
+                    .OrderBy(c => c.TenantId == tenantId.Value && c.ListingType == Models.ListingType.Inventory ? 0
+                              : c.TenantId == tenantId.Value && c.ListingType == Models.ListingType.CertifiedInventory ? 1
+                              : c.TenantId == tenantId.Value ? 2
+                              : 3)
+                    .ThenByDescending(c => c.CreatedAt)
+                : query.OrderByDescending(c => c.CreatedAt),
         };
 
         var cars = await query.ToListAsync();
@@ -149,6 +156,98 @@ public class PublicController : ControllerBase
             .ToListAsync();
 
         return Ok(tenants);
+    }
+
+    [HttpGet("vin/{vin}")]
+    public async Task<ActionResult<VinDecodeResponse>> DecodeVin(string vin)
+    {
+        using var httpClient = new HttpClient();
+        var content = new FormUrlEncodedContent(new[] {
+            new KeyValuePair<string, string>("format", "json"),
+            new KeyValuePair<string, string>("data", vin)
+        });
+        var response = await httpClient.PostAsync(
+            "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVINValuesBatch/", content);
+        var json = await response.Content.ReadAsStringAsync();
+
+        var doc = System.Text.Json.JsonDocument.Parse(json);
+        var results = doc.RootElement.GetProperty("Results");
+
+        string? getValue(string variable) {
+            foreach (var item in results.EnumerateArray()) {
+                if (item.GetProperty("Variable").GetString() == variable) {
+                    var val = item.GetProperty("Value").GetString();
+                    return string.IsNullOrWhiteSpace(val) ? null : val;
+                }
+            }
+            return null;
+        }
+
+        return Ok(new VinDecodeResponse(
+            getValue("Make"), getValue("Model"), getValue("Model Year"),
+            getValue("Body Class"), getValue("Drive Type"), getValue("Fuel Type - Primary"),
+            getValue("Engine Number of Cylinders"), getValue("Displacement (L)"),
+            getValue("Transmission Style"), getValue("Plant Country")
+        ));
+    }
+
+    [HttpPost("consignment-inquiry")]
+    public async Task<ActionResult<InquiryResponse>> SubmitInquiry(
+        [FromQuery] int tenantId, CreateInquiryRequest request)
+    {
+        var tenant = await _db.Tenants.FindAsync(tenantId);
+        if (tenant == null || !tenant.IsActive) return NotFound();
+
+        VinDecodeResponse? vinData = null;
+        try {
+            using var httpClient = new HttpClient();
+            var content = new FormUrlEncodedContent(new[] {
+                new KeyValuePair<string, string>("format", "json"),
+                new KeyValuePair<string, string>("data", request.VIN)
+            });
+            var response = await httpClient.PostAsync(
+                "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVINValuesBatch/", content);
+            var json = await response.Content.ReadAsStringAsync();
+
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            var results = doc.RootElement.GetProperty("Results");
+
+            string? getValue(string variable) {
+                foreach (var item in results.EnumerateArray()) {
+                    if (item.GetProperty("Variable").GetString() == variable) {
+                        var val = item.GetProperty("Value").GetString();
+                        return string.IsNullOrWhiteSpace(val) ? null : val;
+                    }
+                }
+                return null;
+            }
+
+            vinData = new VinDecodeResponse(
+                getValue("Make"), getValue("Model"), getValue("Model Year"),
+                getValue("Body Class"), getValue("Drive Type"), getValue("Fuel Type - Primary"),
+                getValue("Engine Number of Cylinders"), getValue("Displacement (L)"),
+                getValue("Transmission Style"), getValue("Plant Country")
+            );
+        } catch { /* ignore VIN decode errors */ }
+
+        var inquiry = new ConsignmentInquiry {
+            TenantId = tenantId,
+            FullName = request.FullName,
+            Email = request.Email,
+            Phone = request.Phone,
+            VIN = request.VIN,
+            Make = vinData?.Make,
+            Model = vinData?.Model,
+            Year = int.TryParse(vinData?.ModelYear, out var y) ? y : null,
+        };
+        _db.ConsignmentInquiries.Add(inquiry);
+        await _db.SaveChangesAsync();
+
+        return Ok(new InquiryResponse(
+            inquiry.Id, inquiry.TenantId, inquiry.FullName, inquiry.Email, inquiry.Phone,
+            inquiry.VIN, inquiry.Make, inquiry.Model, inquiry.Year,
+            inquiry.Status, inquiry.CarId, inquiry.CreatedAt
+        ));
     }
 
     private static PublicCarResponse MapToPublic(Car car) => new(

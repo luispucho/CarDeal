@@ -984,6 +984,94 @@ public class CrmController : ControllerBase
         return NoContent();
     }
 
+    // ─── Consignment Inquiries ───────────────────────────────────
+
+    [HttpGet("inquiries")]
+    public async Task<ActionResult<List<InquiryResponse>>> GetInquiries()
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var query = _db.ConsignmentInquiries.AsQueryable();
+        if (!isSuperAdmin)
+            query = query.Where(i => i.TenantId == tenantId);
+
+        var inquiries = await query.OrderByDescending(i => i.CreatedAt).ToListAsync();
+        return Ok(inquiries.Select(i => new InquiryResponse(
+            i.Id, i.TenantId, i.FullName, i.Email, i.Phone,
+            i.VIN, i.Make, i.Model, i.Year,
+            i.Status, i.CarId, i.CreatedAt
+        )).ToList());
+    }
+
+    [HttpPut("inquiries/{id}/approve")]
+    public async Task<ActionResult<InquiryResponse>> ApproveInquiry(int id)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var inquiry = await _db.ConsignmentInquiries.FindAsync(id);
+        if (inquiry == null) return NotFound();
+        if (!isSuperAdmin && inquiry.TenantId != tenantId) return Forbid();
+        if (inquiry.Status != "Pending") return BadRequest("Inquiry is not pending");
+
+        // Find the first tenant employee to act as the car owner
+        var tenantUser = await _db.Users
+            .Where(u => u.TenantId == inquiry.TenantId)
+            .FirstOrDefaultAsync();
+        if (tenantUser == null) return BadRequest("No tenant employee found");
+
+        var car = new Car
+        {
+            UserId = tenantUser.Id,
+            TenantId = inquiry.TenantId,
+            Make = inquiry.Make ?? "Unknown",
+            Model = inquiry.Model ?? "Unknown",
+            Year = inquiry.Year ?? 0,
+            Mileage = 0,
+            VIN = inquiry.VIN,
+            Status = CarStatus.Pending,
+            ListingType = ListingType.Consigned,
+            Description = $"Consignment inquiry from {inquiry.FullName} ({inquiry.Email})",
+        };
+        _db.Cars.Add(car);
+        await _db.SaveChangesAsync();
+
+        inquiry.Status = "Approved";
+        inquiry.CarId = car.Id;
+        await _db.SaveChangesAsync();
+
+        return Ok(new InquiryResponse(
+            inquiry.Id, inquiry.TenantId, inquiry.FullName, inquiry.Email, inquiry.Phone,
+            inquiry.VIN, inquiry.Make, inquiry.Model, inquiry.Year,
+            inquiry.Status, inquiry.CarId, inquiry.CreatedAt
+        ));
+    }
+
+    [HttpPut("inquiries/{id}/reject")]
+    public async Task<ActionResult<InquiryResponse>> RejectInquiry(int id)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var inquiry = await _db.ConsignmentInquiries.FindAsync(id);
+        if (inquiry == null) return NotFound();
+        if (!isSuperAdmin && inquiry.TenantId != tenantId) return Forbid();
+        if (inquiry.Status != "Pending") return BadRequest("Inquiry is not pending");
+
+        inquiry.Status = "Rejected";
+        await _db.SaveChangesAsync();
+
+        return Ok(new InquiryResponse(
+            inquiry.Id, inquiry.TenantId, inquiry.FullName, inquiry.Email, inquiry.Phone,
+            inquiry.VIN, inquiry.Make, inquiry.Model, inquiry.Year,
+            inquiry.Status, inquiry.CarId, inquiry.CreatedAt
+        ));
+    }
+
     // ─── Mapping Helpers ─────────────────────────────────────────
 
     private static CrmCarResponse MapToCrmCarResponse(Car c)

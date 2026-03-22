@@ -30,6 +30,8 @@
     "adminBadge": "Admin",
     "adminLink": "⚙ Admin",
     "inventory": "Inventory",
+    "buyCar": "Buy a Car",
+    "sellCar": "Sell My Car",
     "tenants": "Tenants",
     "dealers": "Dealers",
     "crm": "CRM"
@@ -91,7 +93,8 @@
     "nameMinLength": "Name must be at least 2 characters",
     "passwordsNoMatch": "Passwords do not match",
     "loginFailed": "Login failed",
-    "registerFailed": "Registration failed"
+    "registerFailed": "Registration failed",
+    "dealerManaged": "Accounts are managed by your dealer. Contact your dealership for access."
   },
   "cars": {
     "myCars": "My Cars",
@@ -584,5 +587,30 @@
     "readyToGrow": "Ready to Grow Your Dealership?",
     "readySubtitle": "Join hundreds of dealers already using CarDeal",
     "carsAvailable": "cars available"
+  },
+  "consignment": {
+    "sellYourCar": "Sell Your Car",
+    "sellSubtitle": "Get a fair offer for your vehicle in minutes",
+    "step1Title": "Your Information",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "vinNumber": "VIN Number",
+    "vinHelp": "17-character Vehicle Identification Number (found on dashboard or driver door)",
+    "next": "Next",
+    "step2Title": "Confirm Your Vehicle",
+    "vinDecoded": "We found your vehicle:",
+    "vinFailed": "We couldn't decode your VIN, but you can still submit your inquiry",
+    "bodyClass": "Body Class",
+    "driveType": "Drive Type",
+    "fuelType": "Fuel Type",
+    "engine": "Engine",
+    "transmission": "Transmission",
+    "looksCorrect": "This is correct — Submit",
+    "goBack": "Go Back",
+    "step3Title": "Thank You!",
+    "submitted": "Your consignment inquiry has been submitted to",
+    "willContact": "A representative will contact you shortly at",
+    "or": "or"
   }
 }

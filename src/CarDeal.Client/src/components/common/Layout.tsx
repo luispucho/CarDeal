@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { messagesApi } from '../../api/messages';
 import { settingsApi } from '../../api/settings';
+import { publicApi } from '../../api/public';
 import { getCurrentTenant } from '../../utils/tenantCookie';
 
 export default function Layout() {
@@ -24,6 +25,23 @@ export default function Layout() {
 
   const cookieTenant = getCurrentTenant();
   const inventoryLink = cookieTenant ? `/${cookieTenant}/inventory` : '/inventory';
+  const sellLink = cookieTenant ? `/${cookieTenant}/sell` : '/0';
+  const brandLink = cookieTenant ? `/${cookieTenant}` : '/0';
+
+  // Fetch tenant branding when viewing a tenant's site
+  const { data: tenantBranding } = useQuery({
+    queryKey: ['tenantBrandingNav', cookieTenant],
+    queryFn: async () => {
+      const tenants = await publicApi.getTenants();
+      const tenant = tenants.find((t: any) => t.id === cookieTenant || t.slug === String(cookieTenant));
+      if (!tenant) return null;
+      try {
+        return await publicApi.getBranding(tenant.slug);
+      } catch { return { tenantName: tenant.name, logoUrl: null } as any; }
+    },
+    enabled: !!cookieTenant,
+    staleTime: 60000,
+  });
 
   const { data: unreadCount } = useQuery({
     queryKey: ['unreadCount'],
@@ -43,11 +61,17 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
-              <Link to="/" className="text-xl font-bold text-blue-600">
-                {t('nav.brand')}
+              <Link to={brandLink} className="flex items-center gap-2 text-xl font-bold text-blue-600">
+                {tenantBranding?.logoUrl && (
+                  <img src={tenantBranding.logoUrl} alt="" className="h-8 w-8 rounded object-cover" />
+                )}
+                {tenantBranding?.tenantName || t('nav.brand')}
               </Link>
               <Link to={inventoryLink} className="text-gray-700 hover:text-blue-600 transition">
-                {t('nav.inventory')}
+                {t('nav.buyCar')}
+              </Link>
+              <Link to={sellLink} className="text-gray-700 hover:text-blue-600 transition">
+                {t('nav.sellCar')}
               </Link>
               {isAuthenticated && (
                 <>
@@ -125,17 +149,9 @@ export default function Layout() {
                   </button>
                 </>
               ) : (
-                <>
-                  <Link to="/login" className="text-gray-700 hover:text-blue-600 transition">
-                    {t('common.login')}
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
-                  >
-                    {t('common.register')}
-                  </Link>
-                </>
+                <Link to="/login" className="text-gray-700 hover:text-blue-600 transition">
+                  {t('common.login')}
+                </Link>
               )}
             </div>
           </div>

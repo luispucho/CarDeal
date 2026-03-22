@@ -39,6 +39,34 @@ export interface TenantBranding {
   backgroundColor?: string;
 }
 
+export interface VinDecodeData {
+  make?: string;
+  model?: string;
+  modelYear?: string;
+  bodyClass?: string;
+  driveType?: string;
+  fuelTypePrimary?: string;
+  engineCylinders?: string;
+  displacementL?: string;
+  transmissionStyle?: string;
+  plantCountry?: string;
+}
+
+export interface InquiryResponseData {
+  id: number;
+  tenantId: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  vin: string;
+  make?: string;
+  model?: string;
+  year?: number;
+  status: string;
+  carId?: number;
+  createdAt: string;
+}
+
 export const publicApi = {
   getCars: (params?: { make?: string; yearMin?: number; yearMax?: number; priceMin?: number; priceMax?: number; sort?: string; listingType?: string; tenantId?: number }) =>
     apiClient.get<PublicCar[]>('/public/cars', { params }).then(r => r.data),
@@ -50,4 +78,8 @@ export const publicApi = {
     apiClient.get<PublicTenant[]>('/public/tenants').then(r => r.data),
   getBranding: (slug: string) =>
     apiClient.get<TenantBranding>(`/public/branding/${slug}`).then(r => r.data),
+  decodeVin: (vin: string) =>
+    apiClient.get<VinDecodeData>(`/public/vin/${vin}`).then(r => r.data),
+  submitInquiry: (tenantId: number, data: { fullName: string; email: string; phone: string; vin: string }) =>
+    apiClient.post<InquiryResponseData>(`/public/consignment-inquiry?tenantId=${tenantId}`, data).then(r => r.data),
 };
