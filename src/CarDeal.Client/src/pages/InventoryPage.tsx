@@ -130,7 +130,9 @@ export default function InventoryPage() {
   });
 
   const resolvedTenantId = urlTenantId ?? brandingData?.tenantId ?? undefined;
+  // viewerTenantId is for UI context (ribbons); filterTenantId is for API filtering
   const viewerTenantId = resolvedTenantId ?? getCurrentTenant() ?? undefined;
+  const filterTenantId = tenantIdOrSlug ? resolvedTenantId : undefined;
 
   useEffect(() => {
     if (resolvedTenantId) setCurrentTenant(resolvedTenantId);
@@ -152,7 +154,7 @@ export default function InventoryPage() {
   const listingTypeParam = selectedListingTypes.length === 1 ? selectedListingTypes[0] : undefined;
 
   const { data: cars, isLoading } = useQuery({
-    queryKey: ['publicCars', make, yearMin, yearMax, priceMin, priceMax, sort, listingTypeParam, viewerTenantId],
+    queryKey: ['publicCars', make, yearMin, yearMax, priceMin, priceMax, sort, listingTypeParam, filterTenantId],
     queryFn: () =>
       publicApi.getCars({
         make: make || undefined,
@@ -162,7 +164,7 @@ export default function InventoryPage() {
         priceMax: priceMax ? Number(priceMax) : undefined,
         sort: sort || undefined,
         listingType: listingTypeParam,
-        tenantId: viewerTenantId,
+        tenantId: filterTenantId,
       }),
   });
 

@@ -16,6 +16,7 @@ public class Car
     public string? Description { get; set; }
     public decimal? AskingPrice { get; set; }
     public bool IsFeatured { get; set; }
+    public bool IsShared { get; set; } = true;
     public ListingType ListingType { get; set; } = ListingType.Consigned;
     public CarStatus Status { get; set; } = CarStatus.Pending;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

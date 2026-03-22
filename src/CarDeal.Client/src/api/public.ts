@@ -13,6 +13,7 @@ export interface PublicCar {
   listingType: string;
   tenantName: string | null;
   tenantId: number | null;
+  isShared: boolean;
   images: { id: number; blobUrl: string; fileName: string; isPrimary: boolean; uploadedAt: string }[];
 }
 

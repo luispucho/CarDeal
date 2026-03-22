@@ -67,6 +67,11 @@ export default function CarDetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['car', id] }),
   });
 
+  const sharingMutation = useMutation({
+    mutationFn: (isShared: boolean) => carsApi.toggleSharing(Number(id), isShared),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['car', id] }),
+  });
+
   // Keyboard navigation for lightbox
   useEffect(() => {
     if (lightboxIndex === null) return;
@@ -156,6 +161,25 @@ export default function CarDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Sharing toggle */}
+      {isOwner && (
+        <div className="flex items-center gap-2 mb-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={car.isShared}
+              onChange={() => sharingMutation.mutate(!car.isShared)}
+              disabled={sharingMutation.isPending}
+              className="w-4 h-4 rounded"
+            />
+            <span className="text-sm text-gray-600">{t('cars.shareWithDealers')}</span>
+          </label>
+          <span className="text-xs text-gray-400">
+            {car.isShared ? t('cars.sharedEnabled') : t('cars.sharedDisabled')}
+          </span>
+        </div>
+      )}
 
       {editSuccess && <div className="bg-green-50 text-green-600 p-3 rounded-lg mb-4">{editSuccess}</div>}
       {editError && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4">{editError}</div>}

@@ -139,7 +139,10 @@
     "failedUpdate": "Failed to update car",
     "addPhotos": "Add Photos",
     "dragOrClick": "Click to add photos",
-    "confirmDeletePhoto": "Are you sure you want to delete this photo?"
+    "confirmDeletePhoto": "Are you sure you want to delete this photo?",
+    "shareWithDealers": "Share on other dealers' inventory",
+    "sharedEnabled": "Visible on all dealer inventories",
+    "sharedDisabled": "Only visible on your inventory"
   },
   "carStatus": {
     "Pending": "Pending",

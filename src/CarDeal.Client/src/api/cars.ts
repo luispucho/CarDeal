@@ -29,4 +29,7 @@ export const carsApi = {
 
   deleteImage: (carId: number, imageId: number) =>
     apiClient.delete(`/cars/${carId}/images/${imageId}`).then((r) => r.data),
+
+  toggleSharing: (id: number, isShared: boolean) =>
+    apiClient.put(`/cars/${id}/sharing`, { isShared }).then((r) => r.data),
 };

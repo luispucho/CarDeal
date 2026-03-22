@@ -39,7 +39,10 @@ public class PublicController : ControllerBase
         if (yearMax.HasValue) query = query.Where(c => c.Year <= yearMax.Value);
         if (priceMin.HasValue) query = query.Where(c => c.AskingPrice >= priceMin.Value);
         if (priceMax.HasValue) query = query.Where(c => c.AskingPrice <= priceMax.Value);
-        if (tenantId.HasValue) query = query.Where(c => c.TenantId == tenantId.Value);
+        if (tenantId.HasValue)
+            query = query.Where(c => c.TenantId == tenantId.Value || c.IsShared);
+        else
+            query = query.Where(c => c.IsShared);
         if (!string.IsNullOrEmpty(listingType) && Enum.TryParse<ListingType>(listingType, true, out var lt))
             query = query.Where(c => c.ListingType == lt);
 
@@ -64,7 +67,7 @@ public class PublicController : ControllerBase
         var cars = await _db.Cars
             .Include(c => c.Images)
             .Include(c => c.Tenant)
-            .Where(c => c.IsFeatured &&
+            .Where(c => c.IsFeatured && c.IsShared &&
                 c.Status != CarStatus.Sold &&
                 c.Status != CarStatus.Pending &&
                 c.Status != CarStatus.Rejected &&
@@ -152,7 +155,7 @@ public class PublicController : ControllerBase
         car.Id, car.Make, car.Model, car.Year, car.Mileage,
         car.Color, car.Condition, car.Description, car.AskingPrice,
         car.ListingType.ToString(),
-        car.Tenant?.Name, car.TenantId,
+        car.Tenant?.Name, car.TenantId, car.IsShared,
         car.Images.Select(i => new CarImageResponse(i.Id, i.BlobUrl, i.FileName, i.IsPrimary, i.UploadedAt)).ToList()
     );
 }
