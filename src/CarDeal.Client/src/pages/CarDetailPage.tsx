@@ -120,7 +120,8 @@ export default function CarDetailPage() {
   if (!car) return <div className="text-center py-12 text-red-500">{t('cars.carNotFound')}</div>;
 
   const isOwner = car.userId === user?.id || (!!user?.tenantId && car.tenantId === user.tenantId);
-  const isOwnerPending = isOwner && car.status === 'Pending';
+  const canEdit = isOwner; // Tenant employees can always edit tenant cars
+  const canDelete = isOwner && car.status === 'Pending'; // Only delete pending cars
 
   const statusColors: Record<string, string> = {
     Pending: 'bg-yellow-100 text-yellow-800',
@@ -140,16 +141,18 @@ export default function CarDetailPage() {
             {t(`carStatus.${car.status}`)}
           </span>
         </div>
-        {isOwnerPending && (
+        {canEdit && (
           <div className="flex gap-3">
             {!isEditing && (
               <button onClick={startEditing} className="text-blue-600 hover:text-blue-800 text-sm">
                 {t('cars.edit')}
               </button>
             )}
-            <button onClick={() => deleteMutation.mutate()} className="text-red-600 hover:text-red-800 text-sm">
-              {t('common.delete')}
-            </button>
+            {canDelete && (
+              <button onClick={() => deleteMutation.mutate()} className="text-red-600 hover:text-red-800 text-sm">
+                {t('common.delete')}
+              </button>
+            )}
           </div>
         )}
       </div>
