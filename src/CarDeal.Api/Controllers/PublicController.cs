@@ -89,7 +89,9 @@ public class PublicController : ControllerBase
                 c.Status != CarStatus.Rejected &&
                 c.Status != CarStatus.Withdrawn &&
                 (c.ListingType == Models.ListingType.Inventory ||
-                (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null)));
+                 c.ListingType == Models.ListingType.CertifiedInventory ||
+                 c.ListingType == Models.ListingType.TrustedPartner ||
+                 (c.ListingType == Models.ListingType.Consigned && c.TenantId != null)));
 
         return car == null ? NotFound() : Ok(MapToPublic(car));
     }
