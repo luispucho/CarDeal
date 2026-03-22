@@ -22,6 +22,9 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<PlatformConnection> PlatformConnections => Set<PlatformConnection>();
     public DbSet<CarPublication> CarPublications => Set<CarPublication>();
     public DbSet<TenantBranding> TenantBrandings => Set<TenantBranding>();
+    public DbSet<Investor> Investors => Set<Investor>();
+    public DbSet<InvestorContribution> InvestorContributions => Set<InvestorContribution>();
+    public DbSet<CarFunding> CarFundings => Set<CarFunding>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -142,6 +145,29 @@ public class AppDbContext : IdentityDbContext<User>
             e.HasOne(cp => cp.Connection).WithMany().HasForeignKey(cp => cp.PlatformConnectionId).OnDelete(DeleteBehavior.NoAction);
             e.HasIndex(cp => cp.CarId);
             e.HasIndex(cp => cp.PlatformConnectionId);
+        });
+
+        builder.Entity<Investor>(e =>
+        {
+            e.HasOne(i => i.Tenant).WithMany().HasForeignKey(i => i.TenantId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(i => i.TenantId);
+        });
+
+        builder.Entity<InvestorContribution>(e =>
+        {
+            e.HasOne(ic => ic.Investor).WithMany(i => i.Contributions).HasForeignKey(ic => ic.InvestorId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(ic => ic.Car).WithMany().HasForeignKey(ic => ic.CarId).OnDelete(DeleteBehavior.NoAction);
+            e.HasIndex(ic => ic.InvestorId);
+            e.Property(ic => ic.Amount).HasColumnType("decimal(18,2)");
+        });
+
+        builder.Entity<CarFunding>(e =>
+        {
+            e.HasOne(cf => cf.Car).WithMany(c => c.Fundings).HasForeignKey(cf => cf.CarId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(cf => cf.Investor).WithMany(i => i.CarFundings).HasForeignKey(cf => cf.InvestorId).OnDelete(DeleteBehavior.NoAction);
+            e.HasIndex(cf => cf.CarId);
+            e.HasIndex(cf => cf.InvestorId);
+            e.Property(cf => cf.Amount).HasColumnType("decimal(18,2)");
         });
     }
 }

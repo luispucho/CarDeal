@@ -728,6 +728,262 @@ public class CrmController : ControllerBase
         }
     }
 
+    // ─── Investors ─────────────────────────────────────────────
+
+    [HttpGet("investors")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<List<InvestorResponse>>> GetInvestors()
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var query = _db.Investors
+            .Include(i => i.Contributions)
+            .AsQueryable();
+
+        if (!isSuperAdmin)
+            query = query.Where(i => i.TenantId == tenantId);
+
+        var investors = await query.OrderBy(i => i.Name).ToListAsync();
+
+        return Ok(investors.Select(MapToInvestorResponse).ToList());
+    }
+
+    [HttpPost("investors")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<InvestorResponse>> CreateInvestor(CreateInvestorRequest request)
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue && !User.IsInRole("SuperAdmin"))
+            return Forbid();
+
+        var investor = new Investor
+        {
+            TenantId = tenantId!.Value,
+            Name = request.Name,
+            Email = request.Email,
+            Phone = request.Phone,
+            Notes = request.Notes
+        };
+
+        _db.Investors.Add(investor);
+        await _db.SaveChangesAsync();
+
+        return Created($"/api/crm/investors/{investor.Id}", MapToInvestorResponse(investor));
+    }
+
+    [HttpGet("investors/{id}")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<InvestorResponse>> GetInvestor(int id)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var investor = await _db.Investors
+            .Include(i => i.Contributions)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (investor == null) return NotFound();
+        if (!isSuperAdmin && investor.TenantId != tenantId) return Forbid();
+
+        return Ok(MapToInvestorResponse(investor));
+    }
+
+    [HttpPut("investors/{id}")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<InvestorResponse>> UpdateInvestor(int id, UpdateInvestorRequest request)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var investor = await _db.Investors
+            .Include(i => i.Contributions)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (investor == null) return NotFound();
+        if (!isSuperAdmin && investor.TenantId != tenantId) return Forbid();
+
+        if (request.Name != null) investor.Name = request.Name;
+        if (request.Email != null) investor.Email = request.Email;
+        if (request.Phone != null) investor.Phone = request.Phone;
+        if (request.Notes != null) investor.Notes = request.Notes;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(MapToInvestorResponse(investor));
+    }
+
+    [HttpDelete("investors/{id}")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<IActionResult> DeleteInvestor(int id)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var investor = await _db.Investors
+            .Include(i => i.Contributions)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (investor == null) return NotFound();
+        if (!isSuperAdmin && investor.TenantId != tenantId) return Forbid();
+
+        if (investor.Contributions.Any())
+            return BadRequest(new { message = "Cannot delete an investor with existing contributions." });
+
+        _db.Investors.Remove(investor);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // ─── Investor Contributions ─────────────────────────────────
+
+    [HttpGet("investors/{id}/contributions")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<List<ContributionResponse>>> GetContributions(int id)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var investor = await _db.Investors.FirstOrDefaultAsync(i => i.Id == id);
+        if (investor == null) return NotFound();
+        if (!isSuperAdmin && investor.TenantId != tenantId) return Forbid();
+
+        var contributions = await _db.InvestorContributions
+            .Include(c => c.Investor)
+            .Include(c => c.Car)
+            .Where(c => c.InvestorId == id)
+            .OrderByDescending(c => c.Date)
+            .ToListAsync();
+
+        return Ok(contributions.Select(MapToContributionResponse).ToList());
+    }
+
+    [HttpPost("investors/{id}/contributions")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<ContributionResponse>> CreateContribution(int id, CreateContributionRequest request)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var investor = await _db.Investors.FirstOrDefaultAsync(i => i.Id == id);
+        if (investor == null) return NotFound();
+        if (!isSuperAdmin && investor.TenantId != tenantId) return Forbid();
+
+        if (request.CarId.HasValue)
+        {
+            var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == request.CarId.Value);
+            if (car == null)
+                return NotFound(new { message = "Car not found." });
+            if (!isSuperAdmin && car.TenantId != tenantId) return Forbid();
+        }
+
+        var contribution = new InvestorContribution
+        {
+            InvestorId = id,
+            Amount = request.Amount,
+            Type = request.Type,
+            Description = request.Description,
+            CarId = request.CarId
+        };
+
+        _db.InvestorContributions.Add(contribution);
+        await _db.SaveChangesAsync();
+
+        await _db.Entry(contribution).Reference(c => c.Investor).LoadAsync();
+        if (contribution.CarId.HasValue)
+            await _db.Entry(contribution).Reference(c => c.Car).LoadAsync();
+
+        return Created($"/api/crm/investors/{id}/contributions", MapToContributionResponse(contribution));
+    }
+
+    // ─── Car Funding ────────────────────────────────────────────
+
+    [HttpGet("inventory/{carId}/funding")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<List<CarFundingResponse>>> GetCarFunding(int carId)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == carId);
+        if (car == null) return NotFound();
+        if (!isSuperAdmin && car.TenantId != tenantId) return Forbid();
+
+        var fundings = await _db.CarFundings
+            .Include(f => f.Investor)
+            .Where(f => f.CarId == carId)
+            .OrderByDescending(f => f.CreatedAt)
+            .ToListAsync();
+
+        return Ok(fundings.Select(MapToCarFundingResponse).ToList());
+    }
+
+    [HttpPost("inventory/{carId}/funding")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<CarFundingResponse>> CreateCarFunding(int carId, CreateCarFundingRequest request)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == carId);
+        if (car == null) return NotFound();
+        if (!isSuperAdmin && car.TenantId != tenantId) return Forbid();
+
+        if (request.InvestorId.HasValue)
+        {
+            var investor = await _db.Investors.FirstOrDefaultAsync(i => i.Id == request.InvestorId.Value);
+            if (investor == null)
+                return NotFound(new { message = "Investor not found." });
+            if (!isSuperAdmin && investor.TenantId != tenantId) return Forbid();
+        }
+
+        var funding = new CarFunding
+        {
+            CarId = carId,
+            InvestorId = request.InvestorId,
+            Amount = request.Amount,
+            Notes = request.Notes
+        };
+
+        _db.CarFundings.Add(funding);
+        await _db.SaveChangesAsync();
+
+        if (funding.InvestorId.HasValue)
+            await _db.Entry(funding).Reference(f => f.Investor).LoadAsync();
+
+        return Created($"/api/crm/inventory/{carId}/funding", MapToCarFundingResponse(funding));
+    }
+
+    [HttpDelete("inventory/{carId}/funding/{fundingId}")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<IActionResult> DeleteCarFunding(int carId, int fundingId)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == carId);
+        if (car == null) return NotFound();
+        if (!isSuperAdmin && car.TenantId != tenantId) return Forbid();
+
+        var funding = await _db.CarFundings
+            .FirstOrDefaultAsync(f => f.Id == fundingId && f.CarId == carId);
+
+        if (funding == null) return NotFound();
+
+        _db.CarFundings.Remove(funding);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     // ─── Mapping Helpers ─────────────────────────────────────────
 
     private static CrmCarResponse MapToCrmCarResponse(Car c)
@@ -911,4 +1167,24 @@ public class CrmController : ControllerBase
         b.LogoUrl, b.FaviconUrl, b.DealerName, b.Tagline,
         b.Language,
         b.LandingLayoutJson, b.CustomDomain);
+
+    private static InvestorResponse MapToInvestorResponse(Investor i)
+    {
+        var totalInvested = i.Contributions.Where(c => c.Amount > 0).Sum(c => c.Amount);
+        var totalReturned = i.Contributions.Where(c => c.Amount < 0).Sum(c => Math.Abs(c.Amount));
+        var balance = i.Contributions.Sum(c => c.Amount);
+
+        return new InvestorResponse(i.Id, i.Name, i.Email, i.Phone, i.Notes,
+            totalInvested, totalReturned, balance, i.CreatedAt);
+    }
+
+    private static ContributionResponse MapToContributionResponse(InvestorContribution c)
+    {
+        var carName = c.Car != null ? $"{c.Car.Year} {c.Car.Make} {c.Car.Model}" : null;
+        return new ContributionResponse(c.Id, c.InvestorId, c.Investor.Name, c.Amount,
+            c.Type, c.Description, c.CarId, carName, c.Date);
+    }
+
+    private static CarFundingResponse MapToCarFundingResponse(CarFunding f) => new(
+        f.Id, f.CarId, f.InvestorId, f.Investor?.Name, f.Amount, f.Notes, f.CreatedAt);
 }

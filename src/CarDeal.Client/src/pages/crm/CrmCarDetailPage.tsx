@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { crmApi } from '../../api/crm';
+import TierGate from '../../components/common/TierGate';
 
 // ── Schemas ──
 
@@ -23,6 +24,13 @@ const expenseSchema = z.object({
   date: z.string().optional(),
 });
 type ExpenseForm = z.infer<typeof expenseSchema>;
+
+const fundingSchema = z.object({
+  investorId: z.string().optional(),
+  amount: z.coerce.number().positive(),
+  notes: z.string().optional(),
+});
+type FundingForm = z.infer<typeof fundingSchema>;
 
 function formatCurrency(value?: number) {
   if (value == null) return '—';
@@ -59,6 +67,7 @@ export default function CrmCarDetailPage() {
   const [noteMsg, setNoteMsg] = useState('');
   const [noteContent, setNoteContent] = useState('');
   const [pubMsg, setPubMsg] = useState('');
+  const [fundingMsg, setFundingMsg] = useState('');
 
   // ── Queries ──
 
@@ -180,6 +189,53 @@ export default function CrmCarDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['crmPublications', carId] });
       setPubMsg(t('crm.updateSuccess'));
       setTimeout(() => setPubMsg(''), 3000);
+    },
+  });
+
+  // ── Funding ──
+
+  const { data: funding } = useQuery({
+    queryKey: ['carFunding', carId],
+    queryFn: () => crmApi.getCarFunding(carId),
+    enabled: !!carId,
+  });
+
+  const { data: investors } = useQuery({
+    queryKey: ['investors'],
+    queryFn: crmApi.getInvestors,
+  });
+
+  const { data: branding } = useQuery({
+    queryKey: ['branding'],
+    queryFn: crmApi.getBranding,
+  });
+
+  const fundingForm = useForm<FundingForm>({
+    resolver: zodResolver(fundingSchema) as Resolver<FundingForm>,
+    defaultValues: { investorId: '', amount: 0, notes: '' },
+  });
+
+  const addFundingMutation = useMutation({
+    mutationFn: (data: FundingForm) =>
+      crmApi.addCarFunding(carId, {
+        investorId: data.investorId ? Number(data.investorId) : null,
+        amount: data.amount,
+        notes: data.notes || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['carFunding', carId] });
+      fundingForm.reset({ investorId: '', amount: 0, notes: '' });
+      setFundingMsg(t('crm.fundingAdded'));
+      setTimeout(() => setFundingMsg(''), 3000);
+    },
+  });
+
+  const deleteFundingMutation = useMutation({
+    mutationFn: (fundingId: number) => crmApi.deleteCarFunding(carId, fundingId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['carFunding', carId] });
+      setFundingMsg(t('crm.fundingDeleted'));
+      setTimeout(() => setFundingMsg(''), 3000);
     },
   });
 
@@ -328,6 +384,123 @@ export default function CrmCarDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Car Funding (Pro+) ── */}
+      <TierGate requiredTier="Pro" currentTier={branding?.tier}>
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">{t('crm.carFunding')}</h2>
+          {fundingMsg && <p className="text-green-600 text-sm mb-3">{fundingMsg}</p>}
+
+          {/* Funded vs purchase price comparison */}
+          {(() => {
+            const totalFunded = funding?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
+            return (
+              <div className="flex items-center gap-4 mb-4 p-3 bg-gray-50 rounded-lg text-sm">
+                <div>
+                  <span className="text-gray-500">{t('crm.totalFunded')}: </span>
+                  <span className="font-bold text-green-600">{formatCurrency(totalFunded)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">{t('crm.purchasePrice')}: </span>
+                  <span className="font-bold">{formatCurrency(purchasePrice)}</span>
+                </div>
+                {purchasePrice != null && (
+                  <div className={`font-medium ${totalFunded >= purchasePrice ? 'text-green-600' : 'text-amber-600'}`}>
+                    {totalFunded >= purchasePrice ? '✅ Fully funded' : `⚠️ ${formatCurrency(purchasePrice - totalFunded)} remaining`}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          <div className="overflow-x-auto mb-4">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 border-b">
+                  <th className="pb-3 font-medium">{t('crm.fundingSource')}</th>
+                  <th className="pb-3 font-medium text-right">{t('crm.amount')}</th>
+                  <th className="pb-3 font-medium">{t('crm.notes')}</th>
+                  <th className="pb-3 font-medium">{t('crm.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {funding && funding.length > 0 ? (
+                  funding.map((f) => (
+                    <tr key={f.id} className="border-b last:border-0">
+                      <td className="py-3 font-medium">
+                        {f.investorId ? f.investorName : t('crm.dealerFunds')}
+                      </td>
+                      <td className="py-3 text-right font-medium text-green-600">
+                        {formatCurrency(f.amount)}
+                      </td>
+                      <td className="py-3 text-gray-600">{f.notes || '—'}</td>
+                      <td className="py-3">
+                        <button
+                          onClick={() => deleteFundingMutation.mutate(f.id)}
+                          className="text-red-600 hover:underline text-sm"
+                          disabled={deleteFundingMutation.isPending}
+                        >
+                          {t('common.delete')}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-6 text-center text-gray-500">
+                      {t('crm.noExpenses')}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Add Funding Form */}
+          <form
+            onSubmit={fundingForm.handleSubmit((data) => addFundingMutation.mutate(data))}
+            className="flex flex-wrap gap-3 items-end border-t pt-4"
+          >
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">{t('crm.fundingSource')}</label>
+              <select
+                {...fundingForm.register('investorId')}
+                className="border rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="">{t('crm.dealerFunds')}</option>
+                {investors?.map((inv) => (
+                  <option key={inv.id} value={inv.id}>{inv.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">{t('crm.amount')}</label>
+              <input
+                type="number"
+                step="0.01"
+                {...fundingForm.register('amount')}
+                className="border rounded-lg px-3 py-2 text-sm w-28"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">{t('crm.notes')}</label>
+              <input
+                type="text"
+                {...fundingForm.register('notes')}
+                className="border rounded-lg px-3 py-2 text-sm w-48"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={addFundingMutation.isPending}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
+            >
+              {t('crm.addFunding')}
+            </button>
+          </form>
+        </div>
+      </TierGate>
 
       {/* ── Expenses ── */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
