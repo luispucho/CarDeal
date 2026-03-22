@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { publicApi } from '../api/public';
 import { clearCurrentTenant } from '../utils/tenantCookie';
+import { usePageTracking } from '../hooks/usePageTracking';
 
 const FEATURES = [
   { icon: '🏪', key: 'multiDealer' },
@@ -20,6 +21,7 @@ const ENTERPRISE_FEATURES = ['aiAssistant', 'aiSalesAgent', 'aiAnalytics', 'cust
 
 export default function SaasLandingPage() {
   const { t } = useTranslation();
+  usePageTracking('/landing');
 
   // Clear tenant cookie when visiting the SaaS landing page
   useEffect(() => {

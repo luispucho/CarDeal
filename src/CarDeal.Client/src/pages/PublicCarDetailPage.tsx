@@ -7,6 +7,7 @@ import { crmApi } from '../api/crm';
 import { useAuth } from '../context/AuthContext';
 import ListingRibbon from '../components/common/ListingRibbon';
 import { getCurrentTenant, setCurrentTenant } from '../utils/tenantCookie';
+import { usePageTracking } from '../hooks/usePageTracking';
 
 export default function PublicCarDetailPage() {
   const { t } = useTranslation();
@@ -26,6 +27,7 @@ export default function PublicCarDetailPage() {
 
   const resolvedTenantId = urlTenantId ?? brandingData?.tenantId ?? undefined;
   const viewerTenantId = resolvedTenantId ?? getCurrentTenant() ?? undefined;
+  usePageTracking('/car-detail', { carId: Number(id), tenantId: resolvedTenantId });
 
   useEffect(() => {
     if (resolvedTenantId) setCurrentTenant(resolvedTenantId);
