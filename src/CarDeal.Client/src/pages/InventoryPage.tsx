@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { publicApi, type PublicCar } from '../api/public';
 import ListingRibbon from '../components/common/ListingRibbon';
+import { getCurrentTenant, setCurrentTenant } from '../utils/tenantCookie';
 
 const LISTING_TYPES = ['Consigned', 'Inventory', 'CertifiedInventory', 'TrustedPartner'] as const;
 const MAX_COMPARE = 4;
@@ -34,11 +35,15 @@ function CarCard({
   isSelected,
   onToggleCompare,
   disableCompare,
+  viewerTenantId,
+  tenantPrefix,
 }: {
   car: PublicCar;
   isSelected: boolean;
   onToggleCompare: (car: PublicCar) => void;
   disableCompare: boolean;
+  viewerTenantId?: number | null;
+  tenantPrefix: string;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -48,7 +53,7 @@ function CarCard({
     // Don't navigate if clicking the compare checkbox area
     const target = e.target as HTMLElement;
     if (target.closest('label')) return;
-    navigate(`/inventory/${car.id}`);
+    navigate(`${tenantPrefix}/inventory/${car.id}`);
   };
 
   return (
@@ -70,7 +75,7 @@ function CarCard({
       </label>
 
       {/* Listing ribbon - top right */}
-      <ListingRibbon listingType={car.listingType} />
+      <ListingRibbon listingType={car.listingType} tenantId={car.tenantId} viewerTenantId={viewerTenantId} />
 
       {/* Image */}
       <div className="aspect-[16/10] bg-gray-100 overflow-hidden">
@@ -111,6 +116,27 @@ function CarCard({
 export default function InventoryPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { tenantIdOrSlug } = useParams<{ tenantIdOrSlug?: string }>();
+
+  // Resolve tenant from URL or cookie
+  const urlTenantId = tenantIdOrSlug ? (isNaN(Number(tenantIdOrSlug)) ? undefined : Number(tenantIdOrSlug)) : undefined;
+
+  // If we have a URL tenant param, resolve its numeric ID via branding
+  const { data: brandingData } = useQuery({
+    queryKey: ['tenantBranding', tenantIdOrSlug],
+    queryFn: () => publicApi.getBranding(tenantIdOrSlug!),
+    enabled: !!tenantIdOrSlug && !urlTenantId,
+    retry: false,
+  });
+
+  const resolvedTenantId = urlTenantId ?? brandingData?.tenantId ?? undefined;
+  const viewerTenantId = resolvedTenantId ?? getCurrentTenant() ?? undefined;
+
+  useEffect(() => {
+    if (resolvedTenantId) setCurrentTenant(resolvedTenantId);
+  }, [resolvedTenantId]);
+
+  const tenantPrefix = tenantIdOrSlug ? `/${tenantIdOrSlug}` : '';
 
   const [make, setMake] = useState('');
   const [yearMin, setYearMin] = useState<string>('');
@@ -126,7 +152,7 @@ export default function InventoryPage() {
   const listingTypeParam = selectedListingTypes.length === 1 ? selectedListingTypes[0] : undefined;
 
   const { data: cars, isLoading } = useQuery({
-    queryKey: ['publicCars', make, yearMin, yearMax, priceMin, priceMax, sort, listingTypeParam],
+    queryKey: ['publicCars', make, yearMin, yearMax, priceMin, priceMax, sort, listingTypeParam, viewerTenantId],
     queryFn: () =>
       publicApi.getCars({
         make: make || undefined,
@@ -136,6 +162,7 @@ export default function InventoryPage() {
         priceMax: priceMax ? Number(priceMax) : undefined,
         sort: sort || undefined,
         listingType: listingTypeParam,
+        tenantId: viewerTenantId,
       }),
   });
 
@@ -354,6 +381,8 @@ export default function InventoryPage() {
                   isSelected={!!selectedCars.find(c => c.id === car.id)}
                   onToggleCompare={toggleCompare}
                   disableCompare={selectedCars.length >= MAX_COMPARE}
+                  viewerTenantId={viewerTenantId}
+                  tenantPrefix={tenantPrefix}
                 />
               ))}
             </div>

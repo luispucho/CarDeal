@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using CarDeal.Api.Data;
 using CarDeal.Api.DTOs;
 using CarDeal.Api.Models;
+using CarDeal.Api.Services;
 
 namespace CarDeal.Api.Controllers;
 
@@ -15,11 +16,13 @@ public class TenantController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly UserManager<User> _userManager;
+    private readonly IBlobStorageService _blobService;
 
-    public TenantController(AppDbContext db, UserManager<User> userManager)
+    public TenantController(AppDbContext db, UserManager<User> userManager, IBlobStorageService blobService)
     {
         _db = db;
         _userManager = userManager;
+        _blobService = blobService;
     }
 
     [HttpGet]
@@ -97,17 +100,66 @@ public class TenantController : ControllerBase
         return Ok(MapToResponse(tenant));
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpPut("{id}/deactivate")]
+    public async Task<IActionResult> Deactivate(int id)
     {
         var tenant = await _db.Tenants
+            .Include(t => t.Users)
             .Include(t => t.Cars)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (tenant == null) return NotFound();
 
-        if (tenant.Cars.Any())
-            return BadRequest(new { message = "Cannot delete a tenant that has cars. Remove all cars first." });
+        tenant.IsActive = false;
+        await _db.SaveChangesAsync();
+        return Ok(MapToResponse(tenant));
+    }
+
+    [HttpPut("{id}/activate")]
+    public async Task<IActionResult> Activate(int id)
+    {
+        var tenant = await _db.Tenants
+            .Include(t => t.Users)
+            .Include(t => t.Cars)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (tenant == null) return NotFound();
+
+        tenant.IsActive = true;
+        await _db.SaveChangesAsync();
+        return Ok(MapToResponse(tenant));
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id, [FromQuery] bool confirm = false)
+    {
+        if (!confirm)
+            return BadRequest(new { message = "Hard delete requires confirm=true query parameter." });
+
+        var tenant = await _db.Tenants
+            .Include(t => t.Cars).ThenInclude(c => c.Images)
+            .Include(t => t.Users)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (tenant == null) return NotFound();
+
+        // Delete all car images from blob storage
+        foreach (var car in tenant.Cars)
+        {
+            foreach (var image in car.Images)
+            {
+                await _blobService.DeleteAsync(image.BlobUrl);
+            }
+        }
+
+        // Remove all cars (images cascade-deleted by EF)
+        _db.Cars.RemoveRange(tenant.Cars);
+
+        // Unassign all users from the tenant
+        foreach (var user in tenant.Users)
+        {
+            user.TenantId = null;
+        }
 
         _db.Tenants.Remove(tenant);
         await _db.SaveChangesAsync();
@@ -176,6 +228,6 @@ public class TenantController : ControllerBase
 
     private static TenantResponse MapToResponse(Tenant t) => new(
         t.Id, t.Name, t.Slug, t.LogoUrl, t.ContactEmail,
-        t.Tier.ToString(), t.CreatedAt, t.Users.Count, t.Cars.Count
+        t.Tier.ToString(), t.CreatedAt, t.Users.Count, t.Cars.Count, t.IsActive
     );
 }

@@ -1,9 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/common/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
-import HomePage from './pages/HomePage';
+import SaasLandingPage from './pages/SaasLandingPage';
+import TenantLandingPage from './pages/TenantLandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MyCarsPage from './pages/MyCarsPage';
@@ -41,7 +42,11 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<Layout />}>
-              <Route path="/" element={<HomePage />} />
+              {/* Root redirects to SaaS landing */}
+              <Route path="/" element={<Navigate to="/0" replace />} />
+              <Route path="/0" element={<SaasLandingPage />} />
+
+              {/* Non-tenant routes (must come before /:tenantIdOrSlug catch-all) */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
@@ -115,6 +120,12 @@ export default function App() {
                 path="/crm/investors"
                 element={<ProtectedRoute><CrmInvestorsPage /></ProtectedRoute>}
               />
+
+              {/* Tenant-scoped routes (catch-all — must come after specific routes) */}
+              <Route path="/:tenantIdOrSlug" element={<TenantLandingPage />} />
+              <Route path="/:tenantIdOrSlug/inventory" element={<InventoryPage />} />
+              <Route path="/:tenantIdOrSlug/inventory/:id" element={<PublicCarDetailPage />} />
+
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

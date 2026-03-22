@@ -9,6 +9,7 @@ public class Tenant
     public string? ContactEmail { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public TenantTier Tier { get; set; } = TenantTier.Basic;
+    public bool IsActive { get; set; } = true;
     public TenantBranding? Branding { get; set; }
     
     public ICollection<User> Users { get; set; } = new List<User>();
