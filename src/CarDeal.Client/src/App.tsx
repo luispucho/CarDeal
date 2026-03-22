@@ -17,6 +17,7 @@ import MakeOfferPage from './pages/admin/MakeOfferPage';
 import ConsignmentsPage from './pages/admin/ConsignmentsPage';
 import TenantsPage from './pages/admin/TenantsPage';
 import InventoryPage from './pages/InventoryPage';
+import ComparePage from './pages/ComparePage';
 import PublicCarDetailPage from './pages/PublicCarDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 import CrmDashboardPage from './pages/crm/CrmDashboardPage';
@@ -44,6 +45,7 @@ export default function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/inventory/:id" element={<PublicCarDetailPage />} />
+              <Route path="/compare" element={<ComparePage />} />
               <Route
                 path="/my-cars"
                 element={<ProtectedRoute><MyCarsPage /></ProtectedRoute>}
