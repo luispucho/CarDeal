@@ -305,4 +305,14 @@ export const crmApi = {
 
   deleteCarFunding: (carId: number, fundingId: number) =>
     apiClient.delete(`/crm/inventory/${carId}/funding/${fundingId}`).then((r) => r.data),
+
+  // Hidden Cars
+  hideCarFromInventory: (carId: number) =>
+    apiClient.post(`/crm/hidden-cars/${carId}`).then((r) => r.data),
+
+  unhideCarFromInventory: (carId: number) =>
+    apiClient.delete(`/crm/hidden-cars/${carId}`),
+
+  getHiddenCars: () =>
+    apiClient.get<number[]>('/crm/hidden-cars').then((r) => r.data),
 };

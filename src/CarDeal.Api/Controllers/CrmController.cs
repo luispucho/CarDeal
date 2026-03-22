@@ -1322,4 +1322,60 @@ public class CrmController : ControllerBase
 
     private static CarFundingResponse MapToCarFundingResponse(CarFunding f) => new(
         f.Id, f.CarId, f.InvestorId, f.Investor?.Name, f.Amount, f.Notes, f.CreatedAt);
+
+    // ─── Hidden Cars ──────────────────────────────────────────────
+
+    [HttpPost("hidden-cars/{carId}")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<IActionResult> HideCar(int carId)
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue) return Forbid();
+
+        var car = await _db.Cars.FindAsync(carId);
+        if (car == null) return NotFound();
+
+        var exists = await _db.HiddenCars
+            .AnyAsync(h => h.TenantId == tenantId.Value && h.CarId == carId);
+        if (exists) return Ok();
+
+        _db.HiddenCars.Add(new HiddenCar
+        {
+            TenantId = tenantId.Value,
+            CarId = carId,
+            HiddenAt = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync();
+        return Ok();
+    }
+
+    [HttpDelete("hidden-cars/{carId}")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<IActionResult> UnhideCar(int carId)
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue) return Forbid();
+
+        var entry = await _db.HiddenCars
+            .FirstOrDefaultAsync(h => h.TenantId == tenantId.Value && h.CarId == carId);
+        if (entry == null) return NotFound();
+
+        _db.HiddenCars.Remove(entry);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpGet("hidden-cars")]
+    [RequireTier(TenantTier.Pro)]
+    public async Task<ActionResult<List<int>>> GetHiddenCars()
+    {
+        var tenantId = await GetRequiredTenantIdAsync();
+        if (!tenantId.HasValue) return Forbid();
+
+        var ids = await _db.HiddenCars
+            .Where(h => h.TenantId == tenantId.Value)
+            .Select(h => h.CarId)
+            .ToListAsync();
+        return Ok(ids);
+    }
 }

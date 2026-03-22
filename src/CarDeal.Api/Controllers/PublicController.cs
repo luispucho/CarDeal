@@ -48,6 +48,16 @@ public class PublicController : ControllerBase
 
         query = query.Where(c => c.Tenant == null || c.Tenant.IsActive);
 
+        if (tenantId.HasValue)
+        {
+            var hiddenCarIds = await _db.Set<HiddenCar>()
+                .Where(h => h.TenantId == tenantId.Value)
+                .Select(h => h.CarId)
+                .ToListAsync();
+            if (hiddenCarIds.Any())
+                query = query.Where(c => !hiddenCarIds.Contains(c.Id));
+        }
+
         query = sort switch
         {
             "price_asc" => query.OrderBy(c => c.AskingPrice),
