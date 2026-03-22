@@ -68,6 +68,12 @@ export default function CrmCarDetailPage() {
   const [noteContent, setNoteContent] = useState('');
   const [pubMsg, setPubMsg] = useState('');
   const [fundingMsg, setFundingMsg] = useState('');
+  const [showSoldModal, setShowSoldModal] = useState(false);
+  const [soldPrice, setSoldPrice] = useState('');
+  const [soldByEmployee, setSoldByEmployee] = useState('');
+  const [soldByOtherName, setSoldByOtherName] = useState('');
+  const [soldDate, setSoldDate] = useState(new Date().toISOString().split('T')[0]);
+  const [soldMsg, setSoldMsg] = useState('');
 
   // ── Queries ──
 
@@ -210,6 +216,23 @@ export default function CrmCarDetailPage() {
     queryFn: crmApi.getBranding,
   });
 
+  const { data: employees } = useQuery({
+    queryKey: ['crmEmployees'],
+    queryFn: crmApi.getEmployees,
+  });
+
+  const markAsSoldMutation = useMutation({
+    mutationFn: (data: { soldPrice: number; soldByEmployeeId?: string; soldByName?: string; soldDate?: string }) =>
+      crmApi.markAsSold(carId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crmCar', carId] });
+      queryClient.invalidateQueries({ queryKey: ['crmInventory'] });
+      setShowSoldModal(false);
+      setSoldMsg(t('crm.markedAsSold'));
+      setTimeout(() => setSoldMsg(''), 3000);
+    },
+  });
+
   const fundingForm = useForm<FundingForm>({
     resolver: zodResolver(fundingSchema) as Resolver<FundingForm>,
     defaultValues: { investorId: '', amount: 0, notes: '' },
@@ -295,6 +318,27 @@ export default function CrmCarDetailPage() {
               {car.condition && <p>{t('cars.condition')}: {car.condition}</p>}
               {car.askingPrice != null && <p>{t('cars.askingPrice')}: ${car.askingPrice.toLocaleString()}</p>}
             </div>
+            {/* Sold info */}
+            {car.status === 'Sold' && (
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                <p className="font-semibold text-green-800">✅ {t('crm.soldInfo')}</p>
+                {car.soldByName && <p className="text-green-700">{t('crm.soldBy')}: {car.soldByName}</p>}
+                {car.soldDate && <p className="text-green-700">{t('crm.soldDate')}: {new Date(car.soldDate).toLocaleDateString()}</p>}
+              </div>
+            )}
+            {/* Mark as Sold button */}
+            {car.status !== 'Sold' && (
+              <button
+                onClick={() => {
+                  setSoldPrice(car.askingPrice?.toString() || '');
+                  setShowSoldModal(true);
+                }}
+                className="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-medium"
+              >
+                💰 {t('crm.markAsSold')}
+              </button>
+            )}
+            {soldMsg && <p className="text-green-600 text-sm mt-2">{soldMsg}</p>}
             {/* Thumbnails */}
             {car.images.length > 1 && (
               <div className="flex gap-2 mt-3 overflow-x-auto">
@@ -738,6 +782,93 @@ export default function CrmCarDetailPage() {
           <p className="text-gray-500 text-sm">{t('crm.noConnections')}</p>
         )}
       </div>
+
+      {/* ── Mark as Sold Modal ── */}
+      {showSoldModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-4">💰 {t('crm.markAsSold')}</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('crm.soldPrice')} *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={soldPrice}
+                  onChange={(e) => setSoldPrice(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('crm.whoSoldIt')}</label>
+                <select
+                  value={soldByEmployee}
+                  onChange={(e) => {
+                    setSoldByEmployee(e.target.value);
+                    if (e.target.value !== '__other__') setSoldByOtherName('');
+                  }}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  <option value="">{t('crm.selectEmployee')}</option>
+                  {employees?.map((emp) => (
+                    <option key={emp.id} value={emp.id}>{emp.fullName} ({emp.email})</option>
+                  ))}
+                  <option value="__other__">{t('crm.other')}</option>
+                </select>
+              </div>
+              {soldByEmployee === '__other__' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('crm.soldByOtherName')}</label>
+                  <input
+                    type="text"
+                    value={soldByOtherName}
+                    onChange={(e) => setSoldByOtherName(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    placeholder={t('crm.enterName')}
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('crm.soldDate')}</label>
+                <input
+                  type="date"
+                  value={soldDate}
+                  onChange={(e) => setSoldDate(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowSoldModal(false)}
+                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={() => {
+                  if (!soldPrice) return;
+                  const selectedEmployee = employees?.find(e => e.id === soldByEmployee);
+                  const soldByName = soldByEmployee === '__other__'
+                    ? soldByOtherName
+                    : selectedEmployee?.fullName;
+                  markAsSoldMutation.mutate({
+                    soldPrice: Number(soldPrice),
+                    soldByEmployeeId: soldByEmployee && soldByEmployee !== '__other__' ? soldByEmployee : undefined,
+                    soldByName: soldByName || undefined,
+                    soldDate: soldDate || undefined,
+                  });
+                }}
+                disabled={!soldPrice || markAsSoldMutation.isPending}
+                className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-medium disabled:opacity-50"
+              >
+                {markAsSoldMutation.isPending ? '...' : t('crm.confirmSold')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

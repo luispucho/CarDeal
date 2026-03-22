@@ -67,7 +67,7 @@ function InvestorDetail({
 
   const { data: cars } = useQuery({
     queryKey: ['crmInventory'],
-    queryFn: crmApi.getInventory,
+    queryFn: () => crmApi.getInventory(),
   });
 
   const editForm = useForm<EditInvestorForm>({

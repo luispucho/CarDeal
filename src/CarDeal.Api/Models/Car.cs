@@ -22,6 +22,11 @@ public class Car
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
+    // Sold tracking
+    public string? SoldByEmployeeId { get; set; }
+    public string? SoldByName { get; set; }
+    public DateTime? SoldDate { get; set; }
+    
     public int? TenantId { get; set; }
     public Tenant? Tenant { get; set; }
     
