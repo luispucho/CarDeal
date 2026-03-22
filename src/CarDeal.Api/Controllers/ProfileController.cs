@@ -104,6 +104,10 @@ public class ProfileController : ControllerBase
         var user = await _userManager.FindByIdAsync(UserId);
         if (user == null) return NotFound();
 
+        var roles = await _userManager.GetRolesAsync(user);
+        if (user.TenantId != null && !roles.Contains("SuperAdmin"))
+            return StatusCode(403, new { error = "Employees cannot delete their account. Contact your dealership administrator." });
+
         // Mark all active (non-sold, non-rejected) cars as Withdrawn
         var activeCars = await _db.Cars
             .Where(c => c.UserId == UserId &&

@@ -18,6 +18,9 @@ export default function Layout() {
     }).catch(() => {});
   }, [i18n]);
 
+  const isTenantUser = !!user?.tenantId;
+  const isTenantAdmin = isAdmin || isSuperAdmin;
+
   const { data: unreadCount } = useQuery({
     queryKey: ['unreadCount'],
     queryFn: messagesApi.getUnreadCount,
@@ -44,12 +47,16 @@ export default function Layout() {
               </Link>
               {isAuthenticated && (
                 <>
-                  <Link to="/my-cars" className="text-gray-700 hover:text-blue-600 transition">
-                    {t('common.myCars')}
-                  </Link>
-                  <Link to="/submit-car" className="text-gray-700 hover:text-blue-600 transition">
-                    {t('common.submitACar')}
-                  </Link>
+                  {!isTenantUser && (
+                    <>
+                      <Link to="/my-cars" className="text-gray-700 hover:text-blue-600 transition">
+                        {t('common.myCars')}
+                      </Link>
+                      <Link to="/submit-car" className="text-gray-700 hover:text-blue-600 transition">
+                        {t('common.submitACar')}
+                      </Link>
+                    </>
+                  )}
                   <Link to="/inbox" className="text-gray-700 hover:text-blue-600 transition relative">
                     {t('common.messages')}
                     {(unreadCount ?? 0) > 0 && (
@@ -57,9 +64,6 @@ export default function Layout() {
                         {unreadCount}
                       </span>
                     )}
-                  </Link>
-                  <Link to="/profile" className="text-gray-700 hover:text-blue-600 transition">
-                    {t('profile.title')}
                   </Link>
                   {isAdmin && (
                     <Link to="/admin" className="text-gray-700 hover:text-blue-600 transition font-medium">
@@ -71,15 +75,21 @@ export default function Layout() {
                       {t('nav.tenants')}
                     </Link>
                   )}
-                  <Link to="/crm" className="text-gray-700 hover:text-blue-600 transition font-medium">
-                    📊 {t('nav.crm')}
-                  </Link>
-                  <Link to="/crm/connections" className="text-gray-700 hover:text-blue-600 transition font-medium">
-                    🔗 {t('crm.connections')}
-                  </Link>
-                  <Link to="/crm/branding" className="text-gray-700 hover:text-blue-600 transition font-medium">
-                    🎨 {t('crm.branding')}
-                  </Link>
+                  {isTenantUser && (
+                    <Link to="/crm" className="text-gray-700 hover:text-blue-600 transition font-medium">
+                      📊 {t('nav.crm')}
+                    </Link>
+                  )}
+                  {isTenantUser && isTenantAdmin && (
+                    <>
+                      <Link to="/crm/connections" className="text-gray-700 hover:text-blue-600 transition font-medium">
+                        🔗 {t('crm.connections')}
+                      </Link>
+                      <Link to="/crm/branding" className="text-gray-700 hover:text-blue-600 transition font-medium">
+                        🎨 {t('crm.branding')}
+                      </Link>
+                    </>
+                  )}
                 </>
               )}
             </div>
