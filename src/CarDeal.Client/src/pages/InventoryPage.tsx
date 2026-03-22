@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { publicApi, type PublicCar } from '../api/public';
+import { crmApi } from '../api/crm';
+import { useAuth } from '../context/AuthContext';
 import ListingRibbon from '../components/common/ListingRibbon';
 import { getCurrentTenant, setCurrentTenant } from '../utils/tenantCookie';
 
@@ -37,6 +39,8 @@ function CarCard({
   disableCompare,
   viewerTenantId,
   tenantPrefix,
+  isHidden,
+  onToggleHidden,
 }: {
   car: PublicCar;
   isSelected: boolean;
@@ -44,6 +48,8 @@ function CarCard({
   disableCompare: boolean;
   viewerTenantId?: number | null;
   tenantPrefix: string;
+  isHidden?: boolean;
+  onToggleHidden?: (carId: number) => void;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -59,7 +65,7 @@ function CarCard({
   return (
     <div
       onClick={handleCardClick}
-      className="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
+      className={`relative bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer ${isHidden ? 'opacity-60 border-dashed border-orange-300' : 'border-gray-100'}`}
     >
       {/* Compare checkbox */}
       <label className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur rounded-full px-2.5 py-1 shadow-sm cursor-pointer"
@@ -73,6 +79,21 @@ function CarCard({
         />
         <span className="text-xs font-medium text-gray-600">{t('inventory.compare')}</span>
       </label>
+
+      {/* Hidden action button */}
+      {isHidden && onToggleHidden && (
+        <button
+          onClick={e => { e.stopPropagation(); onToggleHidden(car.id); }}
+          className="absolute top-3 right-3 z-20 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow transition"
+        >
+          👁 {t('inventory.showOnInventory')}
+        </button>
+      )}
+      {isHidden && !onToggleHidden && (
+        <span className="absolute top-3 right-3 z-20 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+          🚫 {t('inventory.hidden')}
+        </span>
+      )}
 
       {/* Listing ribbon - top right */}
       <ListingRibbon listingType={car.listingType} tenantId={car.tenantId} viewerTenantId={viewerTenantId} />
@@ -116,6 +137,7 @@ function CarCard({
 export default function InventoryPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { tenantIdOrSlug } = useParams<{ tenantIdOrSlug?: string }>();
 
   // Resolve tenant from URL or cookie
@@ -149,6 +171,39 @@ export default function InventoryPage() {
   const [selectedListingTypes, setSelectedListingTypes] = useState<string[]>([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [selectedCars, setSelectedCars] = useState<PublicCar[]>([]);
+  const [showHidden, setShowHidden] = useState(false);
+
+  const { user, isAuthenticated } = useAuth();
+  const isTenantUser = isAuthenticated && !!user?.tenantId;
+
+  // Fetch hidden car IDs for authenticated tenant users
+  const { data: hiddenCarIds } = useQuery({
+    queryKey: ['hiddenCars'],
+    queryFn: () => crmApi.getHiddenCars(),
+    enabled: isTenantUser,
+  });
+
+  // Fetch hidden cars data when showHidden is toggled on
+  const { data: hiddenCarsData } = useQuery({
+    queryKey: ['hiddenCarsData', hiddenCarIds],
+    queryFn: async () => {
+      if (!hiddenCarIds?.length) return [];
+      const allCars = await publicApi.getCars({});
+      return allCars.filter(c => hiddenCarIds.includes(c.id));
+    },
+    enabled: showHidden && !!hiddenCarIds?.length,
+  });
+
+  const unhideMutation = useMutation({
+    mutationFn: (carId: number) => crmApi.unhideCarFromInventory(carId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hiddenCars'] });
+      queryClient.invalidateQueries({ queryKey: ['hiddenCarsData'] });
+      queryClient.invalidateQueries({ queryKey: ['publicCars'] });
+    },
+  });
+
+  const handleUnhide = (carId: number) => unhideMutation.mutate(carId);
 
   // Use the first checked listing type for the API (or undefined for all)
   const listingTypeParam = selectedListingTypes.length === 1 ? selectedListingTypes[0] : undefined;
@@ -174,6 +229,11 @@ export default function InventoryPage() {
       ? cars.filter(c => selectedListingTypes.includes(c.listingType))
       : cars;
 
+  // Merge hidden cars into display list when showHidden is enabled
+  const displayCars = showHidden && hiddenCarsData?.length
+    ? [...(filteredCars ?? []), ...hiddenCarsData.filter(hc => !(filteredCars ?? []).some(c => c.id === hc.id))]
+    : (filteredCars ?? []);
+
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 30 }, (_, i) => currentYear - i);
 
@@ -191,6 +251,7 @@ export default function InventoryPage() {
     setPriceMax('');
     setSort('');
     setSelectedListingTypes([]);
+    setShowHidden(false);
   };
 
   const toggleCompare = useCallback((car: PublicCar) => {
@@ -311,6 +372,26 @@ export default function InventoryPage() {
         </select>
       </FilterSection>
 
+      {/* Hidden Cars - only for authenticated tenant users */}
+      {isTenantUser && (
+        <FilterSection title={t('inventory.hiddenCars')} defaultOpen={false}>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showHidden}
+              onChange={e => setShowHidden(e.target.checked)}
+              className="w-4 h-4 rounded text-orange-600"
+            />
+            <span className="text-sm text-gray-700">{t('inventory.showHiddenCars')}</span>
+          </label>
+          {showHidden && hiddenCarIds && (
+            <p className="text-xs text-gray-500 mt-1">
+              {t('inventory.hiddenCount', { count: hiddenCarIds.length })}
+            </p>
+          )}
+        </FilterSection>
+      )}
+
       {/* Clear Filters */}
       <button
         onClick={clearFilters}
@@ -366,17 +447,17 @@ export default function InventoryPage() {
         {/* Car grid */}
         <div className="flex-1 min-w-0">
           {/* Results count */}
-          {filteredCars && (
+          {displayCars && (
             <p className="text-sm text-gray-500 mb-4">
-              {t('inventory.vehiclesFound', { count: filteredCars.length })}
+              {t('inventory.vehiclesFound', { count: displayCars.length })}
             </p>
           )}
 
           {isLoading ? (
             <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>
-          ) : filteredCars && filteredCars.length > 0 ? (
+          ) : displayCars && displayCars.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredCars.map(car => (
+              {displayCars.map(car => (
                 <CarCard
                   key={car.id}
                   car={car}
@@ -385,6 +466,8 @@ export default function InventoryPage() {
                   disableCompare={selectedCars.length >= MAX_COMPARE}
                   viewerTenantId={viewerTenantId}
                   tenantPrefix={tenantPrefix}
+                  isHidden={hiddenCarIds?.includes(car.id)}
+                  onToggleHidden={isTenantUser ? handleUnhide : undefined}
                 />
               ))}
             </div>
