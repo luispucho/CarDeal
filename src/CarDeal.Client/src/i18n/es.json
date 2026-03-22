@@ -387,7 +387,9 @@
     "newPasswordGenerated": "Nueva contraseña generada:",
     "savePasswordWarning": "¡Guarda esta contraseña! No se mostrará de nuevo.",
     "credentialsSent": "¡Email de credenciales enviado!",
-    "passwordReset": "¡Contraseña restablecida!"
+    "passwordReset": "¡Contraseña restablecida!",
+    "showcaseOnLanding": "Mostrar en página principal",
+    "showcaseOnLandingDesc": "Mostrar este dealer en la sección de Dealers de Demostración de la página principal pública."
   },
   "tierGate": {
     "title": "¡Ups! A este auto le falta una llanta",

@@ -387,7 +387,9 @@
     "newPasswordGenerated": "New password generated:",
     "savePasswordWarning": "Save this password! It won't be shown again.",
     "credentialsSent": "Credentials email sent!",
-    "passwordReset": "Password has been reset!"
+    "passwordReset": "Password has been reset!",
+    "showcaseOnLanding": "Showcase on landing page",
+    "showcaseOnLandingDesc": "Show this dealer in the Demo Dealers section of the public landing page."
   },
   "tierGate": {
     "title": "Whoa! This car needs a new tire",

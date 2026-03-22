@@ -26,6 +26,7 @@ export default function TenantsPage() {
   const [formName, setFormName] = useState('');
   const [formSlug, setFormSlug] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formIsShowcased, setFormIsShowcased] = useState(false);
 
   const { data: tenants, isLoading } = useQuery({
     queryKey: ['tenants'],
@@ -43,7 +44,7 @@ export default function TenantsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { name?: string; slug?: string; contactEmail?: string } }) =>
+    mutationFn: ({ id, data }: { id: number; data: { name?: string; slug?: string; contactEmail?: string; isShowcased?: boolean } }) =>
       tenantApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
@@ -101,6 +102,7 @@ export default function TenantsPage() {
     setFormName('');
     setFormSlug('');
     setFormEmail('');
+    setFormIsShowcased(false);
   };
 
   const startEdit = (tenant: Tenant) => {
@@ -108,6 +110,7 @@ export default function TenantsPage() {
     setFormName(tenant.name);
     setFormSlug(tenant.slug);
     setFormEmail(tenant.contactEmail ?? '');
+    setFormIsShowcased(tenant.isShowcased);
     setShowCreate(false);
   };
 
@@ -115,7 +118,7 @@ export default function TenantsPage() {
     if (!formSlug.trim()) { alert(t('tenants.slugRequired')); return; }
     const slugTaken = tenants?.some(t => t.slug.toLowerCase() === formSlug.trim().toLowerCase());
     if (slugTaken) { alert(t('tenants.slugTaken')); return; }
-    createMutation.mutate({ name: formName, slug: formSlug.trim(), contactEmail: formEmail || undefined });
+    createMutation.mutate({ name: formName, slug: formSlug.trim(), contactEmail: formEmail || undefined, isShowcased: formIsShowcased });
   };
 
   const handleUpdate = () => {
@@ -124,7 +127,7 @@ export default function TenantsPage() {
     if (slugTaken) { alert(t('tenants.slugTaken')); return; }
     updateMutation.mutate({
       id: editingId,
-      data: { name: formName, slug: formSlug.trim(), contactEmail: formEmail || undefined },
+      data: { name: formName, slug: formSlug.trim(), contactEmail: formEmail || undefined, isShowcased: formIsShowcased },
     });
   };
 
@@ -190,6 +193,18 @@ export default function TenantsPage() {
               <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)}
                 className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
+          </div>
+          <div className="mt-4">
+            <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+              <input
+                type="checkbox"
+                checked={formIsShowcased}
+                onChange={e => setFormIsShowcased(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">🌟 {t('tenants.showcaseOnLanding')}</span>
+            </label>
+            <p className="text-xs text-gray-400 mt-1 ml-6">{t('tenants.showcaseOnLandingDesc')}</p>
           </div>
           <div className="flex gap-2 mt-4">
             <button onClick={editingId != null ? handleUpdate : handleCreate}
@@ -266,6 +281,11 @@ export default function TenantsPage() {
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tenant.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                       {tenant.isActive ? t('tenants.active') : t('tenants.inactive')}
                     </span>
+                    {tenant.isShowcased && (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700" title={t('tenants.showcaseOnLanding')}>
+                        🌟
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-gray-500">/{tenant.slug}</p>
                 </div>

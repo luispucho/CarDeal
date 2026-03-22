@@ -48,7 +48,7 @@ CarDeal is a full-featured marketplace connecting car dealers, sellers, and buye
 
 ### Prerequisites
 
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download) — required (install via `winget install Microsoft.DotNet.SDK.10`)
 - [Node.js 22+](https://nodejs.org/) with npm
 - SQL Server LocalDB (included with Visual Studio)
 
