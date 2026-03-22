@@ -807,6 +807,8 @@ public class CrmController : ControllerBase
         if (request.BackgroundColor != null) branding.BackgroundColor = request.BackgroundColor;
         if (request.DealerName != null) branding.DealerName = request.DealerName;
         if (request.Tagline != null) branding.Tagline = request.Tagline;
+        if (request.Language != null && (request.Language == "en" || request.Language == "es"))
+            branding.Language = request.Language;
 
         // Pro+ tier: layout editor
         if (request.LandingLayoutJson != null)
@@ -907,5 +909,6 @@ public class CrmController : ControllerBase
         b.PrimaryColor, b.SecondaryColor, b.AccentColor,
         b.TextColor, b.BackgroundColor,
         b.LogoUrl, b.FaviconUrl, b.DealerName, b.Tagline,
+        b.Language,
         b.LandingLayoutJson, b.CustomDomain);
 }

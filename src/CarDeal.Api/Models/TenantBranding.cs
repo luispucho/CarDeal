@@ -18,6 +18,7 @@ public class TenantBranding
     public string? FaviconUrl { get; set; }
     public string? DealerName { get; set; }
     public string? Tagline { get; set; }
+    public string Language { get; set; } = "en";  // "en" or "es"
 
     // Layout (Pro+ tier) - JSON array of section IDs defining order
     public string? LandingLayoutJson { get; set; }  // e.g., ["hero","featured","inventory","about","contact"]

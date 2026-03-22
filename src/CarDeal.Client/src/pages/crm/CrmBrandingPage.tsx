@@ -77,6 +77,7 @@ export default function CrmBrandingPage() {
 
   // ── Branding Section ──
   const brandingFormHook = useForm<BrandingForm>();
+  const [language, setLanguage] = useState('en');
 
   if (branding && !brandingFormHook.formState.isDirty && !brandingFormHook.formState.isSubmitted) {
     brandingFormHook.reset({
@@ -85,8 +86,15 @@ export default function CrmBrandingPage() {
     });
   }
 
+  // Sync language state when branding loads
+  const [languageInitialized, setLanguageInitialized] = useState(false);
+  if (branding && !languageInitialized) {
+    setLanguage(branding.language || 'en');
+    setLanguageInitialized(true);
+  }
+
   const brandingMutation = useMutation({
-    mutationFn: (data: BrandingForm) => crmApi.updateBranding(data),
+    mutationFn: (data: BrandingForm) => crmApi.updateBranding({ ...data, language }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branding'] });
       showMsg(t('crm.brandingSaved'), 'success');
@@ -281,6 +289,13 @@ export default function CrmBrandingPage() {
               {...brandingFormHook.register('tagline')}
               className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('crm.siteLanguage')}</label>
+            <select value={language} onChange={e => setLanguage(e.target.value)} className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="en">English</option>
+              <option value="es">Español</option>
+            </select>
           </div>
           <button
             type="submit"

@@ -427,6 +427,7 @@
     "backgroundColor": "Color de Fondo",
     "dealerName": "Nombre del Dealer",
     "tagline": "Eslogan",
+    "siteLanguage": "Idioma del Sitio",
     "logo": "Logo",
     "uploadLogo": "Subir Logo",
     "removeLogo": "Eliminar Logo",

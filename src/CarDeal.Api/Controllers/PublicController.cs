@@ -108,13 +108,16 @@ public class PublicController : ControllerBase
             return Ok(new TenantBrandingResponse(
                 0, tenant.Id, tenant.Name, tenant.Tier.ToString(),
                 "#2563eb", "#1e40af", "#3b82f6", "#1f2937", "#ffffff",
-                null, null, tenant.Name, null, null, null));
+                null, null, tenant.Name, null,
+                "en",
+                null, null));
 
         return Ok(new TenantBrandingResponse(
             branding.Id, branding.TenantId, tenant.Name, tenant.Tier.ToString(),
             branding.PrimaryColor, branding.SecondaryColor, branding.AccentColor,
             branding.TextColor, branding.BackgroundColor,
             branding.LogoUrl, branding.FaviconUrl, branding.DealerName, branding.Tagline,
+            branding.Language,
             branding.LandingLayoutJson, branding.CustomDomain));
     }
 
