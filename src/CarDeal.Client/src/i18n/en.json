@@ -32,7 +32,7 @@
     "inventory": "Inventory",
     "buyCar": "Buy a Car",
     "sellCar": "Sell My Car",
-    "tenants": "Tenants",
+    "tenants": "Dealers",
     "dealers": "Dealers",
     "crm": "CRM"
   },
@@ -343,8 +343,8 @@
     "TrustedPartner": "Trusted Partner"
   },
   "tenants": {
-    "title": "Tenant Management",
-    "createTenant": "Create Tenant",
+    "title": "Dealer Management",
+    "createTenant": "Create Dealer",
     "name": "Name",
     "slug": "Slug",
     "contactEmail": "Contact Email",
@@ -357,14 +357,14 @@
     "noAdmins": "No admins assigned yet",
     "assignUser": "Assign User",
     "userIdPlaceholder": "Enter user ID",
-    "removeTenant": "Delete Tenant",
-    "confirmDelete": "Are you sure you want to delete this tenant?",
-    "noTenants": "No tenants created yet",
-    "created": "Tenant created!",
-    "updated": "Tenant updated!",
-    "deleted": "Tenant deleted",
-    "userAssigned": "User assigned to tenant",
-    "userRemoved": "User removed from tenant",
+    "removeTenant": "Delete Dealer",
+    "confirmDelete": "Are you sure you want to delete this dealer?",
+    "noTenants": "No dealers created yet",
+    "created": "Dealer created!",
+    "updated": "Dealer updated!",
+    "deleted": "Dealer deleted",
+    "userAssigned": "User assigned to dealer",
+    "userRemoved": "User removed from dealer",
     "soldBy": "Sold by",
     "activate": "Activate",
     "deactivate": "Deactivate",
@@ -389,7 +389,7 @@
     "credentialsSent": "Credentials email sent!",
     "passwordReset": "Password has been reset!",
     "showcaseOnLanding": "Showcase on landing page",
-    "showcaseOnLandingDesc": "Show this dealer in the Demo Dealers section of the public landing page."
+    "showcaseOnLandingDesc": "Show this dealer in the showcase section of the public landing page."
   },
   "tierGate": {
     "title": "Whoa! This car needs a new tire",
