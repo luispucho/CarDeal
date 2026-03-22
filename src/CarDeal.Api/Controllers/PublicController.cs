@@ -54,7 +54,14 @@ public class PublicController : ControllerBase
             "price_desc" => query.OrderByDescending(c => c.AskingPrice),
             "year_desc" => query.OrderByDescending(c => c.Year),
             "mileage_asc" => query.OrderBy(c => c.Mileage),
-            _ => query.OrderByDescending(c => c.CreatedAt),
+            _ => tenantId.HasValue
+                ? query
+                    .OrderBy(c => c.TenantId == tenantId.Value && c.ListingType == Models.ListingType.Inventory ? 0
+                              : c.TenantId == tenantId.Value && c.ListingType == Models.ListingType.CertifiedInventory ? 1
+                              : c.TenantId == tenantId.Value ? 2
+                              : 3)
+                    .ThenByDescending(c => c.CreatedAt)
+                : query.OrderByDescending(c => c.CreatedAt),
         };
 
         var cars = await query.ToListAsync();

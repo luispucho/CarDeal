@@ -30,6 +30,8 @@
     "adminBadge": "Admin",
     "adminLink": "⚙ Admin",
     "inventory": "Inventory",
+    "buyCar": "Buy a Car",
+    "sellCar": "Sell My Car",
     "tenants": "Tenants",
     "dealers": "Dealers",
     "crm": "CRM"
