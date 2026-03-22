@@ -18,7 +18,7 @@ public class PublicController : ControllerBase
     public async Task<ActionResult<List<PublicCarResponse>>> GetCars(
         [FromQuery] string? make, [FromQuery] int? yearMin, [FromQuery] int? yearMax,
         [FromQuery] decimal? priceMin, [FromQuery] decimal? priceMax,
-        [FromQuery] string? listingType, [FromQuery] string? sort)
+        [FromQuery] string? listingType, [FromQuery] int? tenantId, [FromQuery] string? sort)
     {
         var query = _db.Cars
             .Include(c => c.Images)
@@ -39,8 +39,11 @@ public class PublicController : ControllerBase
         if (yearMax.HasValue) query = query.Where(c => c.Year <= yearMax.Value);
         if (priceMin.HasValue) query = query.Where(c => c.AskingPrice >= priceMin.Value);
         if (priceMax.HasValue) query = query.Where(c => c.AskingPrice <= priceMax.Value);
+        if (tenantId.HasValue) query = query.Where(c => c.TenantId == tenantId.Value);
         if (!string.IsNullOrEmpty(listingType) && Enum.TryParse<ListingType>(listingType, true, out var lt))
             query = query.Where(c => c.ListingType == lt);
+
+        query = query.Where(c => c.Tenant == null || c.Tenant.IsActive);
 
         query = sort switch
         {
@@ -70,6 +73,7 @@ public class PublicController : ControllerBase
                 c.ListingType == Models.ListingType.CertifiedInventory ||
                 c.ListingType == Models.ListingType.TrustedPartner ||
                 (c.Status == CarStatus.Consigned && c.ListingType == Models.ListingType.Consigned && c.TenantId != null))
+            .Where(c => c.Tenant == null || c.Tenant.IsActive)
             .OrderByDescending(c => c.UpdatedAt)
             .Take(6)
             .ToListAsync();
@@ -91,7 +95,8 @@ public class PublicController : ControllerBase
                 (c.ListingType == Models.ListingType.Inventory ||
                  c.ListingType == Models.ListingType.CertifiedInventory ||
                  c.ListingType == Models.ListingType.TrustedPartner ||
-                 (c.ListingType == Models.ListingType.Consigned && c.TenantId != null)));
+                 (c.ListingType == Models.ListingType.Consigned && c.TenantId != null)) &&
+                (c.Tenant == null || c.Tenant.IsActive));
 
         return car == null ? NotFound() : Ok(MapToPublic(car));
     }
@@ -128,6 +133,7 @@ public class PublicController : ControllerBase
     {
         var tenants = await _db.Tenants
             .Include(t => t.Branding)
+            .Where(t => t.IsActive)
             .OrderBy(t => t.Name)
             .Select(t => new
             {

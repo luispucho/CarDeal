@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { messagesApi } from '../../api/messages';
 import { settingsApi } from '../../api/settings';
+import { getCurrentTenant } from '../../utils/tenantCookie';
 
 export default function Layout() {
   const { t, i18n } = useTranslation();
@@ -19,8 +20,10 @@ export default function Layout() {
   }, [i18n]);
 
   const isTenantUser = !!user?.tenantId;
-  const showCrm = isTenantUser || isSuperAdmin;
   const isTenantAdmin = isAdmin || isSuperAdmin;
+
+  const cookieTenant = getCurrentTenant();
+  const inventoryLink = cookieTenant ? `/${cookieTenant}/inventory` : '/inventory';
 
   const { data: unreadCount } = useQuery({
     queryKey: ['unreadCount'],
@@ -43,12 +46,12 @@ export default function Layout() {
               <Link to="/" className="text-xl font-bold text-blue-600">
                 {t('nav.brand')}
               </Link>
-              <Link to="/inventory" className="text-gray-700 hover:text-blue-600 transition">
+              <Link to={inventoryLink} className="text-gray-700 hover:text-blue-600 transition">
                 {t('nav.inventory')}
               </Link>
               {isAuthenticated && (
                 <>
-                  {!isTenantUser && (
+                  {!isTenantUser && !isSuperAdmin && (
                     <>
                       <Link to="/my-cars" className="text-gray-700 hover:text-blue-600 transition">
                         {t('common.myCars')}
@@ -58,14 +61,16 @@ export default function Layout() {
                       </Link>
                     </>
                   )}
-                  <Link to="/inbox" className="text-gray-700 hover:text-blue-600 transition relative">
-                    {t('common.messages')}
-                    {(unreadCount ?? 0) > 0 && (
-                      <span className="absolute -top-2 -right-4 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
+                  {!isSuperAdmin && (
+                    <Link to="/inbox" className="text-gray-700 hover:text-blue-600 transition relative">
+                      {t('common.messages')}
+                      {(unreadCount ?? 0) > 0 && (
+                        <span className="absolute -top-2 -right-4 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link to="/admin" className="text-gray-700 hover:text-blue-600 transition font-medium">
                       {t('nav.adminLink')}
@@ -73,20 +78,20 @@ export default function Layout() {
                   )}
                   {isSuperAdmin && (
                     <Link to="/admin/tenants" className="text-gray-700 hover:text-blue-600 transition font-medium">
-                      {t('nav.tenants')}
+                      🏪 {t('nav.dealers')}
                     </Link>
                   )}
-                  {showCrm && (
+                  {isTenantUser && (
                     <Link to="/crm" className="text-gray-700 hover:text-blue-600 transition font-medium">
                       📊 {t('nav.crm')}
                     </Link>
                   )}
-                  {showCrm && (
+                  {isTenantUser && (
                     <Link to="/crm/investors" className="text-gray-700 hover:text-blue-600 transition font-medium">
                       💰 {t('crm.investors')}
                     </Link>
                   )}
-                  {showCrm && isTenantAdmin && (
+                  {isTenantUser && isTenantAdmin && (
                     <>
                       <Link to="/crm/connections" className="text-gray-700 hover:text-blue-600 transition font-medium">
                         🔗 {t('crm.connections')}

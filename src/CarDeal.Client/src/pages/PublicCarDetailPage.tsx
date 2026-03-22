@@ -4,11 +4,32 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { publicApi } from '../api/public';
 import ListingRibbon from '../components/common/ListingRibbon';
+import { getCurrentTenant, setCurrentTenant } from '../utils/tenantCookie';
 
 export default function PublicCarDetailPage() {
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
+  const { id, tenantIdOrSlug } = useParams<{ id: string; tenantIdOrSlug?: string }>();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Resolve tenant from URL or cookie
+  const urlTenantId = tenantIdOrSlug ? (isNaN(Number(tenantIdOrSlug)) ? undefined : Number(tenantIdOrSlug)) : undefined;
+
+  const { data: brandingData } = useQuery({
+    queryKey: ['tenantBranding', tenantIdOrSlug],
+    queryFn: () => publicApi.getBranding(tenantIdOrSlug!),
+    enabled: !!tenantIdOrSlug && !urlTenantId,
+    retry: false,
+  });
+
+  const resolvedTenantId = urlTenantId ?? brandingData?.tenantId ?? undefined;
+  const viewerTenantId = resolvedTenantId ?? getCurrentTenant() ?? undefined;
+
+  useEffect(() => {
+    if (resolvedTenantId) setCurrentTenant(resolvedTenantId);
+  }, [resolvedTenantId]);
+
+  const tenantPrefix = tenantIdOrSlug ? `/${tenantIdOrSlug}` : '';
+  const backLink = `${tenantPrefix}/inventory`;
 
   const { data: car, isLoading } = useQuery({
     queryKey: ['publicCar', id],
@@ -34,7 +55,7 @@ export default function PublicCarDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <Link to="/inventory" className="text-blue-600 hover:underline text-sm mb-4 inline-block">
+      <Link to={backLink} className="text-blue-600 hover:underline text-sm mb-4 inline-block">
         ← {t('inventory.title')}
       </Link>
 
@@ -46,7 +67,7 @@ export default function PublicCarDetailPage() {
             className="relative aspect-[4/3] bg-gray-100 rounded-xl overflow-hidden cursor-pointer"
             onClick={() => car.images.length > 0 && setLightboxIndex(car.images.indexOf(primaryImage!))}
           >
-            <ListingRibbon listingType={car.listingType} />
+            <ListingRibbon listingType={car.listingType} tenantId={car.tenantId} viewerTenantId={viewerTenantId} />
             {primaryImage ? (
               <img
                 src={primaryImage.blobUrl}

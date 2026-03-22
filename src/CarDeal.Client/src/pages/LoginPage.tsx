@@ -27,9 +27,11 @@ export default function LoginPage() {
     try {
       setError('');
       await login(data);
-      // Redirect based on role: admin/tenant users go to CRM, regular users to my-cars
+      // Redirect based on role
       const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (savedUser.role === 'SuperAdmin' || savedUser.role === 'Admin' || savedUser.tenantId) {
+      if (savedUser.role === 'SuperAdmin') {
+        navigate('/admin/tenants');
+      } else if (savedUser.tenantId) {
         navigate('/crm');
       } else {
         navigate('/my-cars');

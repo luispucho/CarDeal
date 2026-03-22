@@ -6,9 +6,11 @@ export interface Tenant {
   slug: string;
   logoUrl?: string;
   contactEmail?: string;
+  tier: string;
   createdAt: string;
   userCount: number;
   carCount: number;
+  isActive: boolean;
 }
 
 export const tenantApi = {
@@ -18,7 +20,9 @@ export const tenantApi = {
   getById: (id: number) => apiClient.get<Tenant>(`/tenant/${id}`).then(r => r.data),
   update: (id: number, data: { name?: string; slug?: string; contactEmail?: string }) =>
     apiClient.put<Tenant>(`/tenant/${id}`, data).then(r => r.data),
-  delete: (id: number) => apiClient.delete(`/tenant/${id}`),
+  delete: (id: number) => apiClient.delete(`/tenant/${id}?confirm=true`),
+  activate: (id: number) => apiClient.put(`/tenant/${id}/activate`),
+  deactivate: (id: number) => apiClient.put(`/tenant/${id}/deactivate`),
   getUsers: (id: number) => apiClient.get<any[]>(`/tenant/${id}/users`).then(r => r.data),
   assignUser: (id: number, userId: string) =>
     apiClient.post(`/tenant/${id}/users`, { userId }).then(r => r.data),
