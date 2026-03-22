@@ -38,6 +38,9 @@ export interface CrmCarResponse {
   images: CrmCarImage[];
   expenseCount: number;
   totalExpenses: number;
+  soldByEmployeeId?: string;
+  soldByName?: string;
+  soldDate?: string;
 }
 
 export interface ExpenseResponse {
@@ -172,6 +175,13 @@ export interface CreateNoteRequest {
   content: string;
 }
 
+export interface MarkAsSoldRequest {
+  soldPrice: number;
+  soldByEmployeeId?: string;
+  soldByName?: string;
+  soldDate?: string;
+}
+
 export interface AddEmployeeRequest {
   email: string;
 }
@@ -180,11 +190,14 @@ export interface AddEmployeeRequest {
 
 export const crmApi = {
   // Inventory
-  getInventory: () =>
-    apiClient.get<CrmCarResponse[]>('/crm/inventory').then((r) => r.data),
+  getInventory: (status?: string) =>
+    apiClient.get<CrmCarResponse[]>('/crm/inventory', { params: status ? { status } : undefined }).then((r) => r.data),
 
   getCarById: (id: number) =>
     apiClient.get<CrmCarResponse>(`/crm/inventory/${id}`).then((r) => r.data),
+
+  markAsSold: (id: number, data: MarkAsSoldRequest) =>
+    apiClient.post<CrmCarResponse>(`/crm/inventory/${id}/mark-sold`, data).then((r) => r.data),
 
   updateFinancials: (id: number, data: UpdateFinancialsRequest) =>
     apiClient.put(`/crm/inventory/${id}/financials`, data).then((r) => r.data),

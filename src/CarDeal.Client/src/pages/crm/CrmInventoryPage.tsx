@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -8,13 +9,16 @@ function formatCurrency(value?: number) {
   return `$${value.toLocaleString()}`;
 }
 
+const STATUS_OPTIONS = ['All', 'Pending', 'Reviewed', 'Offered', 'Consigned', 'Sold', 'Rejected', 'Withdrawn'];
+
 export default function CrmInventoryPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const { data: cars, isLoading } = useQuery({
-    queryKey: ['crmInventory'],
-    queryFn: crmApi.getInventory,
+    queryKey: ['crmInventory', statusFilter],
+    queryFn: () => crmApi.getInventory(statusFilter === 'All' ? undefined : statusFilter),
   });
 
   if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
@@ -30,7 +34,27 @@ export default function CrmInventoryPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">{t('crm.inventory')}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{t('crm.inventory')}</h1>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">{t('crm.filterByStatus')}:</span>
+          <div className="flex gap-1 flex-wrap">
+            {STATUS_OPTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`text-xs px-3 py-1.5 rounded-full transition font-medium ${
+                  statusFilter === s
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {s === 'All' ? t('common.all') : t(`carStatus.${s}`, s)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -44,6 +68,9 @@ export default function CrmInventoryPage() {
                 <th className="px-4 py-3 font-medium text-right">{t('crm.salePrice')}</th>
                 <th className="px-4 py-3 font-medium text-right">{t('crm.expenses')}</th>
                 <th className="px-4 py-3 font-medium text-right">{t('crm.profit')}</th>
+                {statusFilter === 'Sold' && (
+                  <th className="px-4 py-3 font-medium">{t('crm.soldBy')}</th>
+                )}
                 <th className="px-4 py-3 font-medium">{t('crm.actions')}</th>
               </tr>
             </thead>
@@ -99,6 +126,11 @@ export default function CrmInventoryPage() {
                     }`}>
                       {profit != null ? formatCurrency(profit) : '—'}
                     </td>
+                    {statusFilter === 'Sold' && (
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {car.soldByName || '—'}
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <button
                         onClick={(e) => {
@@ -115,7 +147,7 @@ export default function CrmInventoryPage() {
               })}
               {(!cars || cars.length === 0) && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={statusFilter === 'Sold' ? 9 : 8} className="px-4 py-8 text-center text-gray-500">
                     {t('crm.totalCars')}: 0
                   </td>
                 </tr>

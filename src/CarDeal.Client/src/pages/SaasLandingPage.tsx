@@ -15,8 +15,8 @@ const FEATURES = [
   { icon: '🎨', key: 'customBranding' },
 ];
 
-const BASIC_FEATURES = ['brandColors', 'logo', 'inventory'];
-const PRO_FEATURES = ['crm', 'employees', 'externalPub', 'advancedStats', 'layoutEditor', 'investors'];
+const BASIC_FEATURES = ['brandColors', 'logo', 'inventory', 'employees'];
+const PRO_FEATURES = ['crm', 'externalPub', 'advancedStats', 'layoutEditor', 'investors'];
 const ENTERPRISE_FEATURES = ['aiAssistant', 'aiSalesAgent', 'aiAnalytics', 'customDomain', 'prioritySupport'];
 
 export default function SaasLandingPage() {

@@ -59,7 +59,7 @@ public class CrmController : ControllerBase
     // ─── Inventory ───────────────────────────────────────────────
 
     [HttpGet("inventory")]
-    public async Task<ActionResult<List<CrmCarResponse>>> GetInventory()
+    public async Task<ActionResult<List<CrmCarResponse>>> GetInventory([FromQuery] string? status)
     {
         var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
         if (!isSuperAdmin && !tenantId.HasValue)
@@ -75,6 +75,9 @@ public class CrmController : ControllerBase
 
         if (!isSuperAdmin)
             query = query.Where(c => c.TenantId == tenantId);
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<CarStatus>(status, true, out var parsedStatus))
+            query = query.Where(c => c.Status == parsedStatus);
 
         var cars = await query.OrderByDescending(c => c.CreatedAt).ToListAsync();
         return Ok(cars.Select(MapToCrmCarResponse).ToList());
@@ -142,6 +145,53 @@ public class CrmController : ControllerBase
 
         var totalExpenses = car.Expenses.Sum(e => e.Amount);
         return Ok(MapToFinancialsResponse(car.Financials, totalExpenses));
+    }
+
+    // ─── Mark as Sold ────────────────────────────────────────────
+
+    [HttpPost("inventory/{id}/mark-sold")]
+    [Authorize(Roles = "TenantAdmin,Admin,SuperAdmin")]
+    public async Task<ActionResult<CrmCarResponse>> MarkAsSold(int id, MarkAsSoldRequest request)
+    {
+        var (tenantId, isSuperAdmin) = await GetTenantContextAsync();
+        if (!isSuperAdmin && !tenantId.HasValue)
+            return Forbid();
+
+        var car = await _db.Cars
+            .Include(c => c.User)
+            .Include(c => c.Tenant)
+            .Include(c => c.Images)
+            .Include(c => c.Financials)
+            .Include(c => c.Expenses)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (car == null) return NotFound();
+        if (!isSuperAdmin && car.TenantId != tenantId) return Forbid();
+
+        car.Status = CarStatus.Sold;
+        car.SoldByEmployeeId = request.SoldByEmployeeId;
+        car.SoldByName = request.SoldByName;
+        car.SoldDate = request.SoldDate ?? DateTime.UtcNow;
+        car.UpdatedAt = DateTime.UtcNow;
+
+        // Update financials with sold price
+        if (car.Financials == null)
+        {
+            car.Financials = new CarFinancials
+            {
+                CarId = id,
+                SalePrice = request.SoldPrice
+            };
+            _db.CarFinancials.Add(car.Financials);
+        }
+        else
+        {
+            car.Financials.SalePrice = request.SoldPrice;
+            car.Financials.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(MapToCrmCarResponse(car));
     }
 
     // ─── Expenses ────────────────────────────────────────────────
@@ -1178,7 +1228,8 @@ public class CrmController : ControllerBase
             c.User?.FullName, c.CreatedAt,
             financials,
             c.Images.Select(i => new CarImageResponse(i.Id, i.BlobUrl, i.FileName, i.IsPrimary, i.UploadedAt)).ToList(),
-            c.Expenses.Count, totalExpenses);
+            c.Expenses.Count, totalExpenses,
+            c.SoldByEmployeeId, c.SoldByName, c.SoldDate);
     }
 
     private static CarFinancialsResponse MapToFinancialsResponse(CarFinancials f, decimal totalExpenses)

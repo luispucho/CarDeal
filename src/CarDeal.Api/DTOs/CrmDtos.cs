@@ -21,7 +21,8 @@ public record CrmCarResponse(
     string? UserName, DateTime CreatedAt,
     CarFinancialsResponse? Financials,
     List<CarImageResponse> Images,
-    int ExpenseCount, decimal TotalExpenses);
+    int ExpenseCount, decimal TotalExpenses,
+    string? SoldByEmployeeId, string? SoldByName, DateTime? SoldDate);
 
 public record PlatformStatsResponse(
     int TotalTenants, int TotalCars, int TotalSold, int TotalActive,
@@ -48,3 +49,9 @@ public record MonthlySales(string Month, int Count, decimal Revenue);
 public record EmployeeResponse(string Id, string Email, string FullName, string Role);
 public record AddEmployeeRequest([Required] string Email);
 public record VisitorLocationStat(string Country, string? City, int Visits);
+
+public record MarkAsSoldRequest(
+    [Required] decimal SoldPrice,
+    string? SoldByEmployeeId,
+    string? SoldByName,
+    DateTime? SoldDate);
