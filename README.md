@@ -98,7 +98,8 @@ Employee passwords are the same as their tenant admin. Each tenant has 10 pre-lo
 ## Features
 
 ### 🏪 Public Marketplace
-- 🔍 **Car Inventory** — Public browsable catalog with filters (make, year, price, listing type, sort)
+- 🔍 **Car Inventory** — Sidebar filters (make, year range, price range, listing type, sort), car comparison
+- 🔄 **Car Comparison** — Select up to 4 cars to compare side-by-side with difference highlighting
 - 🏷️ **Listing Ribbons** — Color-coded badges: Consigned (gray), Inventory (blue), Certified (gold), Trusted Partner (silver)
 - ⭐ **Featured Cars** — Admin-promoted vehicles showcased on the homepage
 - 🚗 **Car Detail Pages** — Full image carousel with lightbox, keyboard navigation, and thumbnails
@@ -124,6 +125,14 @@ Employee passwords are the same as their tenant admin. Each tenant has 10 pre-lo
 - 🧾 **Expense Management** — Log repairs, marketing, transport, inspection costs per vehicle
 - 📝 **Communication Notes** — Internal notes timeline per car with author tracking
 - 👥 **Employee Management** — TenantAdmin adds/removes dealership employees
+- 📡 **External Publishing** — Publish listings to Facebook, Craigslist, Cars.com, AutoTrader, CarGurus, OfferUp (pluggable connector pattern)
+- 🎨 **Branding** — Customize colors, logo, dealer name, tagline, site language per tenant
+- 🧩 **Landing Page Editor** — Drag-and-drop section reordering (Pro tier)
+
+### 💎 Tenant Tiers
+- 🥉 **Basic** — Brand colors, logo, CRM inventory, expenses, employee management
+- 🥈 **Pro** — + External publishing, advanced statistics, landing page layout editor
+- 🥇 **Enterprise** — + Custom domain, priority badge
 
 ### 🔐 Auth & Security
 - 🔑 **JWT Authentication** — Secure token-based auth with refresh tokens

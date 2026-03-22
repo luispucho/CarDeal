@@ -2,16 +2,20 @@
 
 ## Project Overview
 
-CarDeal is a car consignment platform where users submit vehicles for sale and admins review, make offers, and manage consignments. It uses a .NET 9 API backend with a React/TypeScript frontend.
+CarDeal is a multi-tenant car dealership platform with an integrated CRM. Dealers manage inventory with cost tracking, publish to external marketplaces, and handle consignments. Individual sellers submit cars through a transparent process. Built with .NET 10 API + React 19 frontend.
 
 ## Architecture
 
-- **Backend**: ASP.NET Core 9.0 REST API (`src/CarDeal.Api/`)
+- **Backend**: ASP.NET Core 10 REST API (`src/CarDeal.Api/`)
 - **Frontend**: React 19 + TypeScript + Vite (`src/CarDeal.Client/`)
-- **Database**: SQL Server (LocalDB for dev) via Entity Framework Core 9
-- **Auth**: JWT tokens with ASP.NET Identity (roles: Admin, User)
-- **Storage**: Azure Blob Storage for car images (Azurite for local dev)
-- **i18n**: i18next (English + Spanish), admin-controlled site language
+- **Database**: SQL Server (LocalDB for dev) via Entity Framework Core 10
+- **Auth**: JWT tokens + Google/GitHub OAuth with ASP.NET Identity
+- **Roles**: SuperAdmin, Admin, TenantAdmin, User (role-based access + tier-based feature gating)
+- **Multi-tenancy**: Tenant model with tiers (Basic/Pro/Enterprise), branding, and scoped access
+- **CRM**: Integrated inventory cost tracking, expense management, communication notes, statistics
+- **External Publishing**: Pluggable connector pattern for Facebook, Craigslist, Cars.com, AutoTrader, CarGurus, OfferUp
+- **Storage**: Azure Blob Storage for images (LocalBlobStorageService fallback for dev)
+- **i18n**: i18next (English + Spanish), per-tenant language setting
 - **CI/CD**: GitHub Actions → Azure App Service (API) + Azure Static Web Apps (Client)
 
 ## How to Build & Run
@@ -87,111 +91,149 @@ Invoke-RestMethod -Uri "http://localhost:5228/api/cars" -Method POST -Body $car 
 
 ```
 CarDeal.sln
+nuget.config
 src/
 ├── CarDeal.Api/
-│   ├── Controllers/       # HTTP endpoints (Auth, Cars, Admin, Messages, Settings)
-│   ├── Models/            # Domain entities (Car, User, CarImage, Offer, Consignment, Message)
-│   ├── DTOs/              # Request/response records (AuthDtos, CarDtos, OfferDtos, etc.)
-│   ├── Services/          # Business logic interfaces + implementations
+│   ├── Controllers/       # HTTP endpoints
+│   │   ├── AuthController       # Login, register, social OAuth, external callbacks
+│   │   ├── CarsController       # User car CRUD + image upload
+│   │   ├── AdminController      # Car review, offers, consignments, featured toggle
+│   │   ├── PublicController     # Public inventory, featured cars, branding (no auth)
+│   │   ├── ProfileController    # User profile, picture, account deletion
+│   │   ├── TenantController     # SuperAdmin: CRUD tenants, assign users, set tier
+│   │   ├── CrmController       # CRM: inventory financials, expenses, notes, employees,
+│   │   │                        #   stats, branding, connections, publishing
+│   │   ├── MessagesController   # In-app messaging
+│   │   └── SettingsController   # Site language
+│   ├── Models/            # Domain entities
+│   │   ├── Car, CarImage, CarFinancials, CarPublication
+│   │   ├── User (extends IdentityUser)
+│   │   ├── Tenant, TenantBranding
+│   │   ├── Offer, Consignment, Message
+│   │   ├── Expense, CrmNote
+│   │   ├── ExternalPlatform, PlatformConnection
+│   │   └── Enums: CarStatus, ListingType, TenantTier, ExpenseType, PublicationStatus
+│   ├── DTOs/              # Request/response records
+│   ├── Services/          # Business logic (CarService, OfferService, MessageService,
+│   │                      #   BlobStorageService, PublishingService, IPublishingConnector)
+│   ├── Middleware/         # ExceptionMiddleware, RequireTierAttribute
 │   ├── Data/              # AppDbContext (EF Core)
-│   ├── Middleware/        # HTTP middleware
-│   ├── Migrations/        # EF Core migrations
-│   └── Program.cs         # Startup, DI, seeding, middleware pipeline
+│   └── Migrations/        # EF Core migrations
 │
 ├── CarDeal.Client/
 │   └── src/
-│       ├── pages/         # Route components (HomePage, MyCarsPage, admin/*)
-│       ├── components/    # Reusable UI (Layout, ProtectedRoute)
-│       ├── api/           # Axios service layer (auth, cars, admin, messages, settings)
+│       ├── pages/         # Route components
+│       │   ├── HomePage, InventoryPage, ComparePage, PublicCarDetailPage
+│       │   ├── LoginPage, RegisterPage, ProfilePage, NotFoundPage
+│       │   ├── MyCarsPage, SubmitCarPage, CarDetailPage, InboxPage
+│       │   ├── admin/ (DashboardPage, CarReviewPage, MakeOfferPage, ConsignmentsPage, TenantsPage)
+│       │   └── crm/ (CrmDashboardPage, CrmInventoryPage, CrmCarDetailPage,
+│       │             CrmEmployeesPage, CrmBrandingPage, CrmConnectionsPage)
+│       ├── components/    # Reusable UI (Layout, ProtectedRoute, ListingRibbon, TierGate)
+│       ├── api/           # Axios service layer (auth, cars, admin, messages, settings,
+│       │                  #   profile, public, crm, tenant)
 │       ├── context/       # AuthContext (React Context)
 │       ├── types/         # TypeScript interfaces
-│       ├── i18n/          # Translation files (en.json, es.json)
+│       ├── i18n/          # Translation files (en.json, es.json — 250+ keys each)
 │       ├── App.tsx        # Router configuration
 │       └── main.tsx       # React DOM root
 ```
 
 ## API Endpoints
 
-### Public
+### Public (no auth)
 - `POST /api/auth/register` — Register new user
-- `POST /api/auth/login` — Login
+- `POST /api/auth/login` — Login (redirects to /crm for admin/tenant users)
 - `POST /api/auth/refresh` — Refresh JWT
-- `GET /api/settings/language` — Get site language
+- `GET /api/auth/external/{provider}` — Social login (Google/GitHub)
+- `GET /api/public/cars` — Browse inventory (filters: make, year, price, listingType, sort)
+- `GET /api/public/cars/featured` — Featured cars for homepage
+- `GET /api/public/cars/{id}` — Car detail
+- `GET /api/public/branding/{tenantSlug}` — Tenant branding (colors, logo, language)
+- `GET /api/public/tenants` — Tenant directory
+- `GET /api/settings/language` — Site language
 
 ### Authenticated (User)
 - `GET|POST /api/cars` — List/create user's cars
 - `GET|PUT|DELETE /api/cars/{id}` — Read/update/delete car
 - `POST /api/cars/{id}/images` — Upload image (max 5MB, max 10 per car)
 - `DELETE /api/cars/{id}/images/{imageId}` — Remove image
-- `GET /api/messages` — Inbox threads
-- `GET /api/messages/thread?otherUserId=...&carId=...` — Message thread
-- `POST /api/messages` — Send message
-- `PUT /api/messages/{id}/read` — Mark read
-- `GET /api/messages/unread-count` — Unread count
+- `GET|PUT|DELETE /api/profile` — Profile management + account deletion
+- `POST /api/profile/picture` — Upload profile picture
+- `GET|POST /api/messages` — Messaging
 
-### Admin Only
+### Admin
 - `GET /api/admin/dashboard` — Stats
-- `GET /api/admin/cars` — All cars (optional `?status=` filter)
-- `GET /api/admin/cars/{id}` — Car detail
+- `GET /api/admin/cars` — All cars (optional status filter)
 - `POST /api/admin/cars/{carId}/offer` — Make offer
-- `PUT /api/admin/offers/{id}` — Update offer
-- `POST /api/admin/cars/{carId}/consign` — Create consignment
-- `PUT /api/admin/consignments/{id}` — Update consignment
-- `GET /api/admin/consignments` — List consignments
-- `PUT /api/settings/language` — Change site language
+- `PUT /api/admin/cars/{carId}/featured` — Toggle featured
+- Consignment management endpoints
 
-## Coding Conventions
+### SuperAdmin
+- `GET|POST|PUT|DELETE /api/tenant` — CRUD tenants
+- `POST|DELETE /api/tenant/{id}/users` — Assign/remove users
+- `PUT /api/tenant/{id}/tier` — Set tenant tier
+- `GET /api/crm/admin/stats` — Platform-wide statistics
+- `POST /api/crm/admin/tenants/{id}/reset-admin` — Reset tenant admin
 
-### C# (Backend)
-- **DTOs**: Use `record` types (e.g., `record CreateCarRequest(string Make, string Model, ...)`)
-- **Services**: Interface + implementation pattern (`ICarService` / `CarService`)
-- **Async**: All data operations use `async/await` with `Task<T>`
-- **DI**: Constructor injection via ASP.NET Core built-in container
-- **Naming**: PascalCase for classes, methods, properties; camelCase for parameters
-
-### TypeScript (Frontend)
-- **Components**: Functional components with hooks
-- **API calls**: Centralized in `src/api/` using Axios
-- **State**: React Context for auth, TanStack React Query for server state
-- **Forms**: React Hook Form + Zod validation schemas
-- **Translations**: Use `useTranslation()` hook, keys in `en.json`/`es.json`
-- **Styling**: Tailwind CSS utility classes, mobile-first responsive
-
-### General Rules
-- All new UI text must include translation keys in both `en.json` and `es.json`
-- Keep API endpoints RESTful; use proper HTTP verbs and status codes
-- Car images go through Azure Blob Storage (never store in DB or filesystem)
-- All DB operations go through EF Core — no raw SQL unless absolutely necessary
-- Do not hardcode secrets; use `appsettings.json` / environment variables
+### CRM (Tenant-scoped)
+- `GET /api/crm/inventory` — Inventory with financials
+- `PUT /api/crm/inventory/{id}/financials` — Update purchase/sale prices
+- `GET|POST|DELETE /api/crm/inventory/{id}/expenses` — Expense management
+- `GET|POST /api/crm/inventory/{id}/notes` — Communication notes
+- `GET|POST|DELETE /api/crm/employees` — Employee management
+- `GET /api/crm/stats` — Tenant statistics
+- `GET|PUT /api/crm/branding` — Tenant branding (colors, logo, language, layout)
+- `GET|POST|PUT|DELETE /api/crm/connections` — Platform connections
+- `POST /api/crm/inventory/{carId}/publish` — Publish to external platform
+- `POST /api/crm/publications/{id}/unpublish` — Unpublish
 
 ## Domain Model
 
-- **Car**: Make, Model, Year, Mileage, VIN, Color, Condition, Description, AskingPrice, Status
-- **CarStatus**: `Pending → Reviewed → Offered → Consigned → Sold` (or `Rejected`)
-- **CarImage**: BlobUrl, FileName, IsPrimary (belongs to Car)
-- **Offer**: Amount, Notes, Status (belongs to Car, created by Admin)
-- **Consignment**: AgreedPrice, CommissionPercent, StartDate, EndDate, Status (belongs to Car)
-- **Message**: Content, IsRead, SentAt (between Users, optionally linked to Car)
-- **User**: extends IdentityUser with FullName, Phone, CreatedAt
+### Core
+- **Car**: Make, Model, Year, Mileage, VIN, Color, Condition, Description, AskingPrice, Status, ListingType, IsFeatured, TenantId
+- **CarStatus**: `Pending → Reviewed → Offered → Consigned → Sold` (or `Rejected`, `Withdrawn`)
+- **ListingType**: Consigned, Inventory, CertifiedInventory, TrustedPartner
+- **CarImage**: BlobUrl, FileName, IsPrimary
 
-## User Roles
+### Multi-tenancy
+- **Tenant**: Name, Slug, LogoUrl, ContactEmail, Tier (Basic/Pro/Enterprise)
+- **TenantBranding**: Colors (primary, secondary, accent, text, bg), Logo, DealerName, Tagline, Language, LandingLayoutJson, CustomDomain
+- **User**: extends IdentityUser with FullName, Phone, ProfilePictureUrl, TenantId, CreatedAt
 
-| Role  | Can do                                                                  |
-| ----- | ----------------------------------------------------------------------- |
-| Public | View homepage, login/register                                          |
-| User  | Submit cars, upload images, view own cars/offers, send/receive messages |
-| Admin | Review all cars, make offers, create consignments, change site language |
+### CRM
+- **CarFinancials**: PurchasePrice, SalePrice (1:1 with Car)
+- **Expense**: Type (Repair/Marketing/Transport/Inspection/Other), Amount, Description, Date
+- **CrmNote**: Content, AuthorUserId, CreatedAt
 
-## Testing
+### Publishing
+- **ExternalPlatform**: Name, Slug (facebook, craigslist, carscom, autotrader, cargurus, offerup)
+- **PlatformConnection**: TenantId, PlatformId, ApiKey, ApiSecret, AccessToken, AccountId, IsEnabled
+- **CarPublication**: CarId, ConnectionId, Status, ExternalListingId, ExternalUrl
 
-No test projects exist yet. When adding tests:
-- Backend: Use xUnit with EF Core InMemory provider
-- Frontend: Use Vitest + React Testing Library
+### Other
+- **Offer**: Amount, Notes, Status (belongs to Car)
+- **Consignment**: AgreedPrice, CommissionPercent, StartDate, EndDate, Status
+- **Message**: Content, IsRead, SentAt (between Users)
 
-## Configuration Files
+## User Roles & Tiers
 
-- `src/CarDeal.Api/appsettings.json` — DB connection, JWT settings, Azure Blob, admin seed
-- `src/CarDeal.Client/vite.config.ts` — Dev server proxy, build settings
-- `src/CarDeal.Client/tsconfig.json` — TypeScript config
-- `.github/workflows/api.yml` — API CI/CD pipeline
-- `.github/workflows/client.yml` — Client CI/CD pipeline
+### Roles
+| Role | Access |
+|------|--------|
+| Public | Homepage, inventory browse, car detail, register |
+| User | Submit cars, manage listings, profile, messaging |
+| Admin | Review cars, make offers, consignments, featured toggle |
+| TenantAdmin | All Admin + employee management, CRM, branding |
+| SuperAdmin | All TenantAdmin + tenant CRUD, tier management, platform stats |
+
+### Tiers (feature gating via `[RequireTier]` attribute)
+| Feature | Basic | Pro | Enterprise |
+|---------|:-----:|:---:|:----------:|
+| Brand colors + logo + language | ✅ | ✅ | ✅ |
+| CRM inventory + expenses + notes | ✅ | ✅ | ✅ |
+| Employee management | ✅ | ✅ | ✅ |
+| External publishing | ❌ | ✅ | ✅ |
+| Advanced statistics | ❌ | ✅ | ✅ |
+| Landing page layout editor | ❌ | ✅ | ✅ |
+| Custom domain | ❌ | ❌ | ✅ |
