@@ -314,7 +314,19 @@
     "year": "Año",
     "price": "Precio",
     "listingTypeFilter": "Tipo de Listado",
-    "noMax": "Sin Máximo"
+    "noMax": "Sin Máximo",
+    "imInterested": "Me Interesa",
+    "scheduleContact": "Agendar Contacto",
+    "contactAbout": "Contáctanos Sobre Este Auto",
+    "yourName": "Tu Nombre",
+    "yourEmail": "Tu Email",
+    "yourPhone": "Tu Teléfono",
+    "yourMessage": "Tu Mensaje (opcional)",
+    "messagePlaceholder": "¿Alguna pregunta o horario preferido?",
+    "submitInquiry": "Enviar Mi Información",
+    "inquirySubmitted": "¡Gracias!",
+    "inquiryMessage": "Un representante te contactará sobre este",
+    "inquirySoon": "pronto con la información de contacto que proporcionaste"
   },
   "listingType": {
     "Consigned": "Consignado",

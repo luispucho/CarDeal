@@ -139,10 +139,10 @@ export default function PublicCarDetailPage() {
           <div className="bg-blue-50 rounded-xl p-6 text-center">
             <h3 className="text-lg font-bold text-gray-900 mb-2">{t('inventory.interested')}</h3>
             <Link
-              to="/register"
-              className="inline-flex items-center justify-center bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all duration-200 shadow-lg hover:-translate-y-0.5"
+              to={`${tenantPrefix}/inquiry/${car.id}`}
+              className="w-full block text-center bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition font-semibold"
             >
-              {t('inventory.registerCta')}
+              {t('inventory.imInterested')}
             </Link>
           </div>
         </div>

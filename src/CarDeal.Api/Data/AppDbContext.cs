@@ -26,6 +26,7 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<InvestorContribution> InvestorContributions => Set<InvestorContribution>();
     public DbSet<CarFunding> CarFundings => Set<CarFunding>();
     public DbSet<ConsignmentInquiry> ConsignmentInquiries => Set<ConsignmentInquiry>();
+    public DbSet<CarInquiry> CarInquiries => Set<CarInquiry>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -175,6 +176,15 @@ public class AppDbContext : IdentityDbContext<User>
         {
             e.HasOne(ci => ci.Tenant).WithMany().HasForeignKey(ci => ci.TenantId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(ci => ci.Car).WithMany().HasForeignKey(ci => ci.CarId).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(ci => ci.TenantId);
+            e.HasIndex(ci => ci.Status);
+        });
+
+        builder.Entity<CarInquiry>(e =>
+        {
+            e.HasOne(ci => ci.Car).WithMany().HasForeignKey(ci => ci.CarId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(ci => ci.Tenant).WithMany().HasForeignKey(ci => ci.TenantId).OnDelete(DeleteBehavior.NoAction);
+            e.HasIndex(ci => ci.CarId);
             e.HasIndex(ci => ci.TenantId);
             e.HasIndex(ci => ci.Status);
         });

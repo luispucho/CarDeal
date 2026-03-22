@@ -314,7 +314,19 @@
     "year": "Year",
     "price": "Price",
     "listingTypeFilter": "Listing Type",
-    "noMax": "No Max"
+    "noMax": "No Max",
+    "imInterested": "I'm Interested",
+    "scheduleContact": "Schedule a Contact",
+    "contactAbout": "Get in Touch About This Car",
+    "yourName": "Your Name",
+    "yourEmail": "Your Email",
+    "yourPhone": "Your Phone",
+    "yourMessage": "Your Message (optional)",
+    "messagePlaceholder": "Any questions or preferred contact time?",
+    "submitInquiry": "Send My Information",
+    "inquirySubmitted": "Thank you!",
+    "inquiryMessage": "A representative will contact you about this",
+    "inquirySoon": "shortly at the contact information you provided"
   },
   "listingType": {
     "Consigned": "Consigned",
