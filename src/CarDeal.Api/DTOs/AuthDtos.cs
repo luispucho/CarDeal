@@ -23,4 +23,4 @@ public record AuthResponse(
 
 public record RefreshRequest(string RefreshToken);
 
-public record UserDto(string Id, string Email, string FullName, string? Phone, string? ProfilePictureUrl, string Role);
+public record UserDto(string Id, string Email, string FullName, string? Phone, string? ProfilePictureUrl, string Role, int? TenantId);

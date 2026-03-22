@@ -155,7 +155,7 @@ public class AuthController : ControllerBase
             new JwtSecurityTokenHandler().WriteToken(token),
             new JwtSecurityTokenHandler().WriteToken(refreshToken),
             expiration,
-            new UserDto(user.Id, user.Email!, user.FullName, user.Phone, user.ProfilePictureUrl, role)
+            new UserDto(user.Id, user.Email!, user.FullName, user.Phone, user.ProfilePictureUrl, role, user.TenantId)
         );
     }
 
