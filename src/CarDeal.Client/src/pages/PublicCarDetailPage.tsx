@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { publicApi } from '../api/public';
+import { crmApi } from '../api/crm';
 import { useAuth } from '../context/AuthContext';
 import ListingRibbon from '../components/common/ListingRibbon';
 import { getCurrentTenant, setCurrentTenant } from '../utils/tenantCookie';
@@ -37,6 +38,24 @@ export default function PublicCarDetailPage() {
     queryKey: ['publicCar', id],
     queryFn: () => publicApi.getCarById(Number(id)),
     enabled: !!id,
+  });
+
+  const queryClient = useQueryClient();
+
+  const { data: hiddenCars } = useQuery({
+    queryKey: ['hiddenCars'],
+    queryFn: () => crmApi.getHiddenCars(),
+    enabled: isAuthenticated && !!user?.tenantId,
+  });
+
+  const isHidden = !!car && !!hiddenCars?.includes(car.id);
+
+  const hideMutation = useMutation({
+    mutationFn: () =>
+      isHidden
+        ? crmApi.unhideCarFromInventory(car!.id)
+        : crmApi.hideCarFromInventory(car!.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['hiddenCars'] }),
   });
 
   useEffect(() => {
@@ -115,6 +134,16 @@ export default function PublicCarDetailPage() {
 
           {car.tenantName && (
             <p className="text-sm text-gray-500 mb-2">{t('tenants.soldBy')}: {car.tenantName}</p>
+          )}
+
+          {isAuthenticated && user?.tenantId && car.tenantId !== user.tenantId && (
+            <button
+              onClick={() => hideMutation.mutate()}
+              disabled={hideMutation.isPending}
+              className="text-sm text-gray-500 hover:text-red-600 transition mt-0 mb-2"
+            >
+              {isHidden ? `👁 ${t('inventory.showOnInventory')}` : `🚫 ${t('inventory.hideFromInventory')}`}
+            </button>
           )}
 
           {car.askingPrice != null && (

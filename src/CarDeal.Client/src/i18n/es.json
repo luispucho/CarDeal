@@ -326,7 +326,11 @@
     "submitInquiry": "Enviar Mi Información",
     "inquirySubmitted": "¡Gracias!",
     "inquiryMessage": "Un representante te contactará sobre este",
-    "inquirySoon": "pronto con la información de contacto que proporcionaste"
+    "inquirySoon": "pronto con la información de contacto que proporcionaste",
+    "hideFromInventory": "No mostrar en mi inventario",
+    "showOnInventory": "Mostrar en mi inventario",
+    "carHidden": "Auto oculto de tu inventario",
+    "carUnhidden": "Auto visible en tu inventario nuevamente"
   },
   "listingType": {
     "Consigned": "Consignado",

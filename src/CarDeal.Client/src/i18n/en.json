@@ -326,7 +326,11 @@
     "submitInquiry": "Send My Information",
     "inquirySubmitted": "Thank you!",
     "inquiryMessage": "A representative will contact you about this",
-    "inquirySoon": "shortly at the contact information you provided"
+    "inquirySoon": "shortly at the contact information you provided",
+    "hideFromInventory": "Don't show on my inventory",
+    "showOnInventory": "Show on my inventory",
+    "carHidden": "Car hidden from your inventory",
+    "carUnhidden": "Car visible on your inventory again"
   },
   "listingType": {
     "Consigned": "Consigned",
