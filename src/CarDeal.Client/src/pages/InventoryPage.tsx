@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { publicApi, type PublicCar } from '../api/public';
@@ -41,12 +41,24 @@ function CarCard({
   disableCompare: boolean;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const primaryImage = car.images.find(i => i.isPrimary) ?? car.images[0];
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking the compare checkbox area
+    const target = e.target as HTMLElement;
+    if (target.closest('label')) return;
+    navigate(`/inventory/${car.id}`);
+  };
+
   return (
-    <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+    <div
+      onClick={handleCardClick}
+      className="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
+    >
       {/* Compare checkbox */}
-      <label className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur rounded-full px-2.5 py-1 shadow-sm cursor-pointer">
+      <label className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur rounded-full px-2.5 py-1 shadow-sm cursor-pointer"
+        onClick={e => e.stopPropagation()}>
         <input
           type="checkbox"
           checked={isSelected}
@@ -91,14 +103,6 @@ function CarCard({
         {car.askingPrice != null && (
           <p className="mt-4 text-2xl font-extrabold text-gray-900">${car.askingPrice.toLocaleString()}</p>
         )}
-
-        {/* View button */}
-        <Link
-          to={`/inventory/${car.id}`}
-          className="mt-4 block text-center bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition text-sm font-semibold"
-        >
-          {t('inventory.viewDetails')}
-        </Link>
       </div>
     </div>
   );

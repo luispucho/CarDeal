@@ -89,7 +89,68 @@ export interface PlatformStatsResponse {
   totalRevenue: number;
 }
 
+export interface InvestorResponse {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+  totalInvested: number;
+  totalReturned: number;
+  balance: number;
+  createdAt: string;
+}
+
+export interface ContributionResponse {
+  id: number;
+  investorId: number;
+  investorName: string;
+  amount: number;
+  type: string;
+  description?: string;
+  carId?: number;
+  carName?: string;
+  date: string;
+}
+
+export interface CarFundingResponse {
+  id: number;
+  carId: number;
+  investorId?: number;
+  investorName?: string;
+  amount: number;
+  notes?: string;
+  createdAt: string;
+}
+
 // ── Request types ──
+
+export interface CreateInvestorRequest {
+  name: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+}
+
+export interface UpdateInvestorRequest {
+  name?: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+}
+
+export interface CreateContributionRequest {
+  amount: number;
+  type: string;
+  description?: string;
+  carId?: number;
+}
+
+export interface CreateCarFundingRequest {
+  investorId?: number | null;
+  amount: number;
+  notes?: string;
+}
 
 export interface UpdateFinancialsRequest {
   purchasePrice?: number;
@@ -211,4 +272,37 @@ export const crmApi = {
 
   deleteLogo: () =>
     apiClient.delete('/crm/branding/logo').then((r) => r.data),
+
+  // Investors
+  getInvestors: () =>
+    apiClient.get<InvestorResponse[]>('/crm/investors').then((r) => r.data),
+
+  createInvestor: (data: CreateInvestorRequest) =>
+    apiClient.post<InvestorResponse>('/crm/investors', data).then((r) => r.data),
+
+  getInvestor: (id: number) =>
+    apiClient.get<InvestorResponse>(`/crm/investors/${id}`).then((r) => r.data),
+
+  updateInvestor: (id: number, data: UpdateInvestorRequest) =>
+    apiClient.put<InvestorResponse>(`/crm/investors/${id}`, data).then((r) => r.data),
+
+  deleteInvestor: (id: number) =>
+    apiClient.delete(`/crm/investors/${id}`).then((r) => r.data),
+
+  // Contributions
+  getContributions: (investorId: number) =>
+    apiClient.get<ContributionResponse[]>(`/crm/investors/${investorId}/contributions`).then((r) => r.data),
+
+  addContribution: (investorId: number, data: CreateContributionRequest) =>
+    apiClient.post<ContributionResponse>(`/crm/investors/${investorId}/contributions`, data).then((r) => r.data),
+
+  // Car Funding
+  getCarFunding: (carId: number) =>
+    apiClient.get<CarFundingResponse[]>(`/crm/inventory/${carId}/funding`).then((r) => r.data),
+
+  addCarFunding: (carId: number, data: CreateCarFundingRequest) =>
+    apiClient.post<CarFundingResponse>(`/crm/inventory/${carId}/funding`, data).then((r) => r.data),
+
+  deleteCarFunding: (carId: number, fundingId: number) =>
+    apiClient.delete(`/crm/inventory/${carId}/funding/${fundingId}`).then((r) => r.data),
 };

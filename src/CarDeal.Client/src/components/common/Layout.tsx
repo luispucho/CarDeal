@@ -80,6 +80,11 @@ export default function Layout() {
                       📊 {t('nav.crm')}
                     </Link>
                   )}
+                  {isTenantUser && (
+                    <Link to="/crm/investors" className="text-gray-700 hover:text-blue-600 transition font-medium">
+                      💰 {t('crm.investors')}
+                    </Link>
+                  )}
                   {isTenantUser && isTenantAdmin && (
                     <>
                       <Link to="/crm/connections" className="text-gray-700 hover:text-blue-600 transition font-medium">
