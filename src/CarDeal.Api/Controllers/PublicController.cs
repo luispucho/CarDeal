@@ -153,7 +153,7 @@ public class PublicController : ControllerBase
     {
         var tenants = await _db.Tenants
             .Include(t => t.Branding)
-            .Where(t => t.IsActive)
+            .Where(t => t.IsActive && t.IsShowcased)
             .OrderBy(t => t.Name)
             .Select(t => new
             {

@@ -47,7 +47,8 @@ public class TenantController : ControllerBase
         {
             Name = request.Name,
             Slug = request.Slug,
-            ContactEmail = request.ContactEmail
+            ContactEmail = request.ContactEmail,
+            IsShowcased = request.IsShowcased
         };
 
         _db.Tenants.Add(tenant);
@@ -126,6 +127,7 @@ public class TenantController : ControllerBase
             tenant.Slug = request.Slug;
         }
         if (request.ContactEmail != null) tenant.ContactEmail = request.ContactEmail;
+        if (request.IsShowcased.HasValue) tenant.IsShowcased = request.IsShowcased.Value;
 
         await _db.SaveChangesAsync();
         return Ok(MapToResponse(tenant));
@@ -295,6 +297,6 @@ public class TenantController : ControllerBase
 
     private static TenantResponse MapToResponse(Tenant t) => new(
         t.Id, t.Name, t.Slug, t.LogoUrl, t.ContactEmail,
-        t.Tier.ToString(), t.CreatedAt, t.Users.Count, t.Cars.Count, t.IsActive
+        t.Tier.ToString(), t.CreatedAt, t.Users.Count, t.Cars.Count, t.IsActive, t.IsShowcased
     );
 }

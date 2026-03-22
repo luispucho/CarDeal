@@ -11,14 +11,15 @@ export interface Tenant {
   userCount: number;
   carCount: number;
   isActive: boolean;
+  isShowcased: boolean;
 }
 
 export const tenantApi = {
   list: () => apiClient.get<Tenant[]>('/tenant').then(r => r.data),
-  create: (data: { name: string; slug: string; contactEmail?: string }) =>
+  create: (data: { name: string; slug: string; contactEmail?: string; isShowcased?: boolean }) =>
     apiClient.post<Tenant>('/tenant', data).then(r => r.data),
   getById: (id: number) => apiClient.get<Tenant>(`/tenant/${id}`).then(r => r.data),
-  update: (id: number, data: { name?: string; slug?: string; contactEmail?: string }) =>
+  update: (id: number, data: { name?: string; slug?: string; contactEmail?: string; isShowcased?: boolean }) =>
     apiClient.put<Tenant>(`/tenant/${id}`, data).then(r => r.data),
   delete: (id: number) => apiClient.delete(`/tenant/${id}?confirm=true`),
   activate: (id: number) => apiClient.put(`/tenant/${id}/activate`),
