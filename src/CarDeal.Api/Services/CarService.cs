@@ -8,13 +8,13 @@ namespace CarDeal.Api.Services;
 public interface ICarService
 {
     Task<CarResponse> CreateAsync(string userId, CreateCarRequest request);
-    Task<CarResponse?> GetByIdAsync(int id, string? userId = null);
-    Task<List<CarResponse>> GetByUserAsync(string userId);
+    Task<CarResponse?> GetByIdAsync(int id, string? userId = null, int? tenantId = null);
+    Task<List<CarResponse>> GetByUserAsync(string userId, int? tenantId = null);
     Task<List<CarResponse>> GetAllAsync(string? statusFilter = null);
-    Task<CarResponse?> UpdateAsync(int id, string userId, UpdateCarRequest request);
-    Task<bool> DeleteAsync(int id, string userId);
-    Task<CarImageResponse> AddImageAsync(int carId, string userId, Stream stream, string fileName, string contentType);
-    Task<bool> RemoveImageAsync(int carId, int imageId, string userId);
+    Task<CarResponse?> UpdateAsync(int id, string userId, UpdateCarRequest request, int? tenantId = null);
+    Task<bool> DeleteAsync(int id, string userId, int? tenantId = null);
+    Task<CarImageResponse> AddImageAsync(int carId, string userId, Stream stream, string fileName, string contentType, int? tenantId = null);
+    Task<bool> RemoveImageAsync(int carId, int imageId, string userId, int? tenantId = null);
     Task SetFeaturedAsync(int carId, bool isFeatured);
 }
 
@@ -53,7 +53,7 @@ public class CarService : ICarService
         return await GetByIdAsync(car.Id) ?? throw new InvalidOperationException("Failed to create car");
     }
 
-    public async Task<CarResponse?> GetByIdAsync(int id, string? userId = null)
+    public async Task<CarResponse?> GetByIdAsync(int id, string? userId = null, int? tenantId = null)
     {
         var query = _db.Cars
             .Include(c => c.User)
@@ -62,23 +62,30 @@ public class CarService : ICarService
             .Include(c => c.Offers).ThenInclude(o => o.AdminUser)
             .AsQueryable();
 
-        if (userId != null)
+        if (tenantId != null)
+            query = query.Where(c => c.TenantId == tenantId);
+        else if (userId != null)
             query = query.Where(c => c.UserId == userId);
 
         var car = await query.FirstOrDefaultAsync(c => c.Id == id);
         return car == null ? null : MapToResponse(car);
     }
 
-    public async Task<List<CarResponse>> GetByUserAsync(string userId)
+    public async Task<List<CarResponse>> GetByUserAsync(string userId, int? tenantId = null)
     {
-        var cars = await _db.Cars
+        var query = _db.Cars
             .Include(c => c.User)
             .Include(c => c.Tenant)
             .Include(c => c.Images)
             .Include(c => c.Offers).ThenInclude(o => o.AdminUser)
-            .Where(c => c.UserId == userId)
-            .OrderByDescending(c => c.CreatedAt)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (tenantId != null)
+            query = query.Where(c => c.TenantId == tenantId);
+        else
+            query = query.Where(c => c.UserId == userId);
+
+        var cars = await query.OrderByDescending(c => c.CreatedAt).ToListAsync();
         return cars.Select(MapToResponse).ToList();
     }
 
@@ -98,9 +105,13 @@ public class CarService : ICarService
         return cars.Select(MapToResponse).ToList();
     }
 
-    public async Task<CarResponse?> UpdateAsync(int id, string userId, UpdateCarRequest request)
+    public async Task<CarResponse?> UpdateAsync(int id, string userId, UpdateCarRequest request, int? tenantId = null)
     {
-        var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+        Car? car;
+        if (tenantId != null)
+            car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id && c.TenantId == tenantId);
+        else
+            car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
         if (car == null) return null;
 
         if (request.Make != null) car.Make = request.Make;
@@ -118,9 +129,13 @@ public class CarService : ICarService
         return await GetByIdAsync(car.Id);
     }
 
-    public async Task<bool> DeleteAsync(int id, string userId)
+    public async Task<bool> DeleteAsync(int id, string userId, int? tenantId = null)
     {
-        var car = await _db.Cars.Include(c => c.Images).FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+        Car? car;
+        if (tenantId != null)
+            car = await _db.Cars.Include(c => c.Images).FirstOrDefaultAsync(c => c.Id == id && c.TenantId == tenantId);
+        else
+            car = await _db.Cars.Include(c => c.Images).FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
         if (car == null) return false;
 
         foreach (var img in car.Images)
@@ -131,10 +146,14 @@ public class CarService : ICarService
         return true;
     }
 
-    public async Task<CarImageResponse> AddImageAsync(int carId, string userId, Stream stream, string fileName, string contentType)
+    public async Task<CarImageResponse> AddImageAsync(int carId, string userId, Stream stream, string fileName, string contentType, int? tenantId = null)
     {
-        var car = await _db.Cars.Include(c => c.Images).FirstOrDefaultAsync(c => c.Id == carId && c.UserId == userId)
-            ?? throw new KeyNotFoundException("Car not found");
+        Car? car;
+        if (tenantId != null)
+            car = await _db.Cars.Include(c => c.Images).FirstOrDefaultAsync(c => c.Id == carId && c.TenantId == tenantId);
+        else
+            car = await _db.Cars.Include(c => c.Images).FirstOrDefaultAsync(c => c.Id == carId && c.UserId == userId);
+        if (car == null) throw new KeyNotFoundException("Car not found");
 
         if (car.Images.Count >= 10)
             throw new InvalidOperationException("Maximum 10 images per car");
@@ -153,10 +172,15 @@ public class CarService : ICarService
         return new CarImageResponse(image.Id, image.BlobUrl, image.FileName, image.IsPrimary, image.UploadedAt);
     }
 
-    public async Task<bool> RemoveImageAsync(int carId, int imageId, string userId)
+    public async Task<bool> RemoveImageAsync(int carId, int imageId, string userId, int? tenantId = null)
     {
-        var image = await _db.CarImages.Include(i => i.Car)
-            .FirstOrDefaultAsync(i => i.Id == imageId && i.CarId == carId && i.Car.UserId == userId);
+        IQueryable<CarImage> query = _db.CarImages.Include(i => i.Car);
+        if (tenantId != null)
+            query = query.Where(i => i.Id == imageId && i.CarId == carId && i.Car.TenantId == tenantId);
+        else
+            query = query.Where(i => i.Id == imageId && i.CarId == carId && i.Car.UserId == userId);
+
+        var image = await query.FirstOrDefaultAsync();
         if (image == null) return false;
 
         await _blobService.DeleteAsync(image.BlobUrl);

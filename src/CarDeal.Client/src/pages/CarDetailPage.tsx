@@ -119,7 +119,8 @@ export default function CarDetailPage() {
   if (isLoading) return <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>;
   if (!car) return <div className="text-center py-12 text-red-500">{t('cars.carNotFound')}</div>;
 
-  const isOwnerPending = car.userId === user?.id && car.status === 'Pending';
+  const isOwner = car.userId === user?.id || (!!user?.tenantId && car.tenantId === user.tenantId);
+  const isOwnerPending = isOwner && car.status === 'Pending';
 
   const statusColors: Record<string, string> = {
     Pending: 'bg-yellow-100 text-yellow-800',
@@ -164,7 +165,7 @@ export default function CarDetailPage() {
             {car.images.map((img) => (
               <div key={img.id} className="relative group">
                 <img src={img.blobUrl} alt={img.fileName} className="w-full h-32 object-cover rounded-lg cursor-pointer" onClick={() => setLightboxIndex(car.images.indexOf(img))} />
-                {car.userId === user?.id && (
+                {isOwner && (
                   <button
                     onClick={() => { if (window.confirm(t('cars.confirmDeletePhoto'))) deleteImageMutation.mutate(img.id); }}
                     className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition"
@@ -179,7 +180,7 @@ export default function CarDetailPage() {
         ) : (
           <p className="text-gray-500">{t('cars.noPhotosYet')}</p>
         )}
-        {car.userId === user?.id && car.images.length < 10 && (
+        {isOwner && car.images.length < 10 && (
           <div className="mt-4">
             <label className="inline-flex items-center gap-2 cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
