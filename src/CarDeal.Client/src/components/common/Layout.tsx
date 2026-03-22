@@ -124,6 +124,9 @@ export default function Layout() {
                   )}
                   {isTenantUser && isTenantAdmin && (
                     <>
+                      <Link to="/crm/employees" className="text-gray-700 hover:text-blue-600 transition font-medium">
+                        👥 {t('crm.employees')}
+                      </Link>
                       <Link to="/crm/connections" className="text-gray-700 hover:text-blue-600 transition font-medium">
                         🔗 {t('crm.connections')}
                       </Link>
