@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { adminApi } from '../../api/admin';
 import { settingsApi } from '../../api/settings';
 import { tenantApi } from '../../api/tenant';
+import { crmApi } from '../../api/crm';
 import { useAuth } from '../../context/AuthContext';
 
 export default function DashboardPage() {
@@ -20,6 +21,12 @@ export default function DashboardPage() {
   const { data: tenants } = useQuery({
     queryKey: ['tenants'],
     queryFn: tenantApi.list,
+    enabled: isSuperAdmin,
+  });
+
+  const { data: platformStats } = useQuery({
+    queryKey: ['crmPlatformStats'],
+    queryFn: crmApi.getPlatformStats,
     enabled: isSuperAdmin,
   });
 
@@ -135,25 +142,28 @@ export default function DashboardPage() {
                   <th className="pb-3 font-medium">Tier</th>
                   <th className="pb-3 font-medium">{t('tenants.users')}</th>
                   <th className="pb-3 font-medium">{t('tenants.cars')}</th>
-                  <th className="pb-3 font-medium">{t('common.actions')}</th>
+                  <th className="pb-3 font-medium text-right">{t('crm.visitsThisMonth')}</th>
+                  <th className="pb-3 font-medium text-right">{t('crm.visitsThisYear')}</th>
                 </tr>
               </thead>
               <tbody>
-                {tenants.map((tenant) => (
-                  <tr key={tenant.id} className="border-b last:border-0 hover:bg-gray-50">
-                    <td className="py-3 font-medium">{tenant.name}</td>
-                    <td className="py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${TIER_COLORS[tenant.tier] || 'bg-gray-100'}`}>
-                        {tenant.tier}
-                      </span>
-                    </td>
-                    <td className="py-3">{tenant.userCount}</td>
-                    <td className="py-3">{tenant.carCount}</td>
-                    <td className="py-3">
-                      <Link to="/admin/tenants" className="text-blue-600 hover:underline">{t('tenants.manageAdmins')}</Link>
-                    </td>
-                  </tr>
-                ))}
+                {tenants.map((tenant) => {
+                  const visitData = platformStats?.salesByTenant.find(s => s.tenantId === tenant.id);
+                  return (
+                    <tr key={tenant.id} className="border-b last:border-0 hover:bg-gray-50">
+                      <td className="py-3 font-medium">{tenant.name}</td>
+                      <td className="py-3">
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${TIER_COLORS[tenant.tier] || 'bg-gray-100'}`}>
+                          {tenant.tier}
+                        </span>
+                      </td>
+                      <td className="py-3">{tenant.userCount}</td>
+                      <td className="py-3">{tenant.carCount}</td>
+                      <td className="py-3 text-right">{visitData?.visitsThisMonth ?? 0}</td>
+                      <td className="py-3 text-right">{visitData?.visitsThisYear ?? 0}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
