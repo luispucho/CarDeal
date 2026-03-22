@@ -76,6 +76,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 
 // Services
+builder.Services.AddSingleton<IImageProcessingService, ImageProcessingService>();
 if (builder.Environment.IsDevelopment() &&
     builder.Configuration["Azure:BlobStorage:ConnectionString"] == "UseDevelopmentStorage=true")
 {
