@@ -5,6 +5,7 @@ export interface UserDto {
   phone?: string;
   profilePictureUrl?: string;
   role: string;
+  tenantId?: number | null;
 }
 
 export interface ProfileResponse {
